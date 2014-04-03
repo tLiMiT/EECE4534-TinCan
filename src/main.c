@@ -54,15 +54,17 @@ int main(void)
     /* Blackfin setup function to configure processor */	
     status = blackfin_setup(); //returns 0 if successful and -1 if failed
     if (status) {
-        printf("\r\n Blackfin Setup Failed"); 
+        printf("\r\n [Main]: Blackfin Setup Failed");
         return -1;
     }
     
     /* FPGA setup function to configure FPGA, make sure the FPGA configuration
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
-    status = fpga_setup(); //returns 0 if successful and -1 if failed
+    //status = fpga_setup(); //returns 0 if successful and -1 if failed
+    status = fpga_programmer((unsigned char *)fpga_gpio_uart_bin, sizeof(fpga_gpio_uart_bin));
+    status = fpga_loader(0x3); //returns 0 if successful and -1 if failed
     if (status) {
-        printf("\r\n FPGA Setup Failed"); 
+        printf("\r\n [Main]: FPGA Setup Failed");
         return -1;
     }
     
