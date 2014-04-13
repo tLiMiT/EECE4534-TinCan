@@ -14,17 +14,34 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration buildProperties="" id="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration buildProperties="" description="" id="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430" name="Default" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430.400313409" name="/" resourcePath="">
 						<toolChain id="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.914917759" name="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base" superClass="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base">
 							<targetPlatform archList="all" binaryParser="com.analog.gnu.toolchain.blackfin.BFIN_ELF" id="com.analog.gnu.toolchain.blackfin.elf.platform.base.1887322217" name="Development Platform" osList="all" superClass="com.analog.gnu.toolchain.blackfin.elf.platform.base"/>
-							<builder id="com.analog.gnu.toolchain.blackfin.builder.base.1358192043" managedBuildOn="false" name="Gnu Make Builder.Default" superClass="com.analog.gnu.toolchain.blackfin.builder.base"/>
+							<builder id="com.analog.gnu.toolchain.blackfin.builder.base.1358192043" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="com.analog.gnu.toolchain.blackfin.builder.base"/>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.archiver.515771993" name="Blackfin ELF Archiver" superClass="com.analog.gnu.toolchain.blackfin.elf.archiver"/>
-							<tool id="com.analog.gnu.toolchain.blackfin.elf.assembler.1923544302" name="Blackfin ELF Assembler" superClass="com.analog.gnu.toolchain.blackfin.elf.assembler"/>
-							<tool id="com.analog.gnu.toolchain.blackfin.elf.c.compiler.2063372252" name="Blackfin ELF C Compiler" superClass="com.analog.gnu.toolchain.blackfin.elf.c.compiler"/>
+							<tool id="com.analog.gnu.toolchain.blackfin.elf.assembler.1923544302" name="Blackfin ELF Assembler" superClass="com.analog.gnu.toolchain.blackfin.elf.assembler">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.671225345" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="com.analog.gnu.toolchain.blackfin.elf.c.compiler.2063372252" name="Blackfin ELF C Compiler" superClass="com.analog.gnu.toolchain.blackfin.elf.c.compiler">
+								<option id="gnu.c.compiler.option.include.paths.1286902435" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;C:\Users\Tim\Documents\GitHub\TinCan-XBee-Phone\inc&quot;"/>
+								</option>
+								<inputType id="com.analog.gnu.toolchain.blackfin.elf.c.input.1223232011" superClass="com.analog.gnu.toolchain.blackfin.elf.c.input"/>
+							</tool>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.c.linker.1794923388" name="Blackfin ELF C Linker" superClass="com.analog.gnu.toolchain.blackfin.elf.c.linker"/>
-							<tool id="com.analog.gnu.toolchain.blackfin.elf.cpp.compiler.1922540803" name="Blackfin ELF C++ Compiler" superClass="com.analog.gnu.toolchain.blackfin.elf.cpp.compiler"/>
-							<tool id="com.analog.gnu.toolchain.blackfin.elf.cpp.linker.1294798697" name="Blackfin ELF C++ Linker" superClass="com.analog.gnu.toolchain.blackfin.elf.cpp.linker"/>
+							<tool id="com.analog.gnu.toolchain.blackfin.elf.cpp.compiler.1922540803" name="Blackfin ELF C++ Compiler" superClass="com.analog.gnu.toolchain.blackfin.elf.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.include.paths.103187545" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;C:\Users\Tim\Documents\GitHub\TinCan-XBee-Phone\inc&quot;"/>
+								</option>
+								<inputType id="com.analog.gnu.toolchain.blackfin.elf.cpp.input.1462602142" superClass="com.analog.gnu.toolchain.blackfin.elf.cpp.input"/>
+							</tool>
+							<tool id="com.analog.gnu.toolchain.blackfin.elf.cpp.linker.1294798697" name="Blackfin ELF C++ Linker" superClass="com.analog.gnu.toolchain.blackfin.elf.cpp.linker">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.165021883" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.ldr.base.421992500" name="Blackfin Loader" superClass="com.analog.gnu.toolchain.blackfin.elf.ldr.base"/>
 						</toolChain>
 					</folderInfo>
@@ -33,8 +50,18 @@
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="TinCan.null.453313718" name="TinCan"/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430;com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430.400313409;com.analog.gnu.toolchain.blackfin.elf.c.compiler.2063372252;com.analog.gnu.toolchain.blackfin.elf.c.input.1223232011">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.analog.gnu.toolchain.blackfin.Blackfin_ELF_GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430;com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430.400313409;com.analog.gnu.toolchain.blackfin.elf.cpp.compiler.1922540803;com.analog.gnu.toolchain.blackfin.elf.cpp.input.1462602142">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.analog.gnu.toolchain.blackfin.Blackfin_ELF_GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1386957269;com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1386957269.1762714978;com.analog.gnu.toolchain.blackfin.elf.cpp.compiler.1979898148;com.analog.gnu.toolchain.blackfin.elf.cpp.input.2092691957">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.analog.gnu.toolchain.blackfin.Blackfin_ELF_GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
@@ -42,8 +69,4 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.analog.gnu.toolchain.blackfin.Blackfin_ELF_GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="TinCan.null.453313718" name="TinCan"/>
-	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>
