@@ -194,7 +194,7 @@ void audioRx_isr(void *pThisArg)
         	/* 3. Otherwise, attempt to acquire a chunk from the buffer
 			 * pool.
 			 */
-			if (bufferPool_aquire(pThis->pBuffP, &pThis->pPending) == PASS) {
+			if (bufferPool_acquire(pThis->pBuffP, &pThis->pPending) == PASS) {
 
 				/* If successful, configure the DMA to write
 				 * to this chunk.

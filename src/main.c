@@ -62,7 +62,7 @@ int main(void)
     binary data is loaded in to SDRAM at "FPGA_DATA_START_ADDR" */
     //status = fpga_setup(); //returns 0 if successful and -1 if failed
     status = fpga_programmer((unsigned char *)fpga_gpio_uart_bin, sizeof(fpga_gpio_uart_bin));
-    status = fpga_loader(0x3); //returns 0 if successful and -1 if failed
+    //status = fpga_loader(0x3); //returns 0 if successful and -1 if failed
     if (status) {
         printf("\r\n [Main]: FPGA Setup Failed");
         return -1;
