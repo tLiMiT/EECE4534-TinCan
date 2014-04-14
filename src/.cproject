@@ -18,20 +18,20 @@
 					<folderInfo id="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.1876410430.400313409" name="/" resourcePath="">
 						<toolChain id="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base.914917759" name="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base" superClass="com.analog.gnu.toolchain.blackfin.toolchain.bfin.elf.base">
 							<targetPlatform archList="all" binaryParser="com.analog.gnu.toolchain.blackfin.BFIN_ELF" id="com.analog.gnu.toolchain.blackfin.elf.platform.base.1887322217" name="Development Platform" osList="all" superClass="com.analog.gnu.toolchain.blackfin.elf.platform.base"/>
-							<builder id="com.analog.gnu.toolchain.blackfin.builder.base.1358192043" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="com.analog.gnu.toolchain.blackfin.builder.base"/>
+							<builder arguments="C:\EECE4535\cygwin\makew32" command="C:\EECE4535\cygwin\bin\bash.exe" id="com.analog.gnu.toolchain.blackfin.builder.base.1358192043" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="com.analog.gnu.toolchain.blackfin.builder.base"/>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.archiver.515771993" name="Blackfin ELF Archiver" superClass="com.analog.gnu.toolchain.blackfin.elf.archiver"/>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.assembler.1923544302" name="Blackfin ELF Assembler" superClass="com.analog.gnu.toolchain.blackfin.elf.assembler">
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.671225345" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.c.compiler.2063372252" name="Blackfin ELF C Compiler" superClass="com.analog.gnu.toolchain.blackfin.elf.c.compiler">
-								<option id="gnu.c.compiler.option.include.paths.1286902435" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.c.compiler.option.include.paths.1286902435" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Tim\Documents\GitHub\TinCan-XBee-Phone\inc&quot;"/>
 								</option>
 								<inputType id="com.analog.gnu.toolchain.blackfin.elf.c.input.1223232011" superClass="com.analog.gnu.toolchain.blackfin.elf.c.input"/>
 							</tool>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.c.linker.1794923388" name="Blackfin ELF C Linker" superClass="com.analog.gnu.toolchain.blackfin.elf.c.linker"/>
 							<tool id="com.analog.gnu.toolchain.blackfin.elf.cpp.compiler.1922540803" name="Blackfin ELF C++ Compiler" superClass="com.analog.gnu.toolchain.blackfin.elf.cpp.compiler">
-								<option id="gnu.cpp.compiler.option.include.paths.103187545" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+								<option id="gnu.cpp.compiler.option.include.paths.103187545" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Users\Tim\Documents\GitHub\TinCan-XBee-Phone\inc&quot;"/>
 								</option>
 								<inputType id="com.analog.gnu.toolchain.blackfin.elf.cpp.input.1462602142" superClass="com.analog.gnu.toolchain.blackfin.elf.cpp.input"/>
@@ -69,4 +69,10 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.analog.gnu.toolchain.blackfin.Blackfin_ELF_GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/TinCan"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>
