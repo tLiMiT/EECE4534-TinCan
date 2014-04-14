@@ -37,7 +37,7 @@ void audioTx_dmaConfig(chunk_t *pchunk)
 	*pDMA4_CONFIG &= ~DMAEN;
 
 	/* 2. Configure start address */
-	*pDMA4_START_ADDR = pchunk->u16_buff;
+	*pDMA4_START_ADDR = &pchunk->u16_buff[0];
 
 	/* 3. set X count */
 	*pDMA4_X_COUNT = pchunk->bytesUsed/2;
@@ -85,7 +85,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
  
     /* Configure the DMA4 for TX (data transfer/memory read) */
     /* Read, 1-D, interrupt enabled, 16 bit transfer, Auto buffer */
-    *pDMA4_CONFIG = WDSIZE_16 | DI_EN | DI_EN; /* 16 bit amd DMA enable */
+    *pDMA4_CONFIG = WDSIZE_16 | DI_EN; /* 16 bit amd DMA enable */
     
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA4_SPORT0_TX, audioTx_isr, pThis);
@@ -134,12 +134,12 @@ void audioTx_isr(void *pThisArg)
     chunk_t                  *pchunk              = NULL;
     // validate that TX DMA IRQ was triggered 
     if ( *pDMA4_IRQ_STATUS & 0x1  ) {
-        printf("[TXISR]\n");
+        //printf("[TXISR]\n");
         /* We need to remove the data from the queue and create space for more data
            (The data was read previously by the DMA)
 
         1. First, attempt to get the new chunk, and check if it's available: */
-    	if (queue_get(&pThis->queue, &pchunk) == PASS) {
+    	if (queue_get(&pThis->queue, (void**)&pchunk) == PASS) {
     		/* 2. If so, release old chunk on success back to buffer pool */
     		bufferPool_release(pThis->pBuffP, pThis->pPending);
 
@@ -148,10 +148,10 @@ void audioTx_isr(void *pThisArg)
     		pThis->pPending = pchunk;
     	}
        
+    	 // config DMA either with new chunk (if there was one), or with old chunk on empty Q
+    	 audioTx_dmaConfig(pThis->pPending);
+
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
-        
-        // config DMA either with new chunk (if there was one), or with old chunk on empty Q
-        audioTx_dmaConfig(pThis->pPending);
     }
 }
 
@@ -169,7 +169,6 @@ void audioTx_isr(void *pThisArg)
  */
 int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 {
-    int                         count                   = 0;
     
     if ( NULL == pThis || NULL == pChunk ) {
         printf("[TX]: Failed to put\r\n");
@@ -183,14 +182,14 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
         asm("idle;");
     }
     powerMode_change(PWR_FULL_ON);
-        
+
     /* If DMA not running ? */
     if ( 0 == pThis->running ) {
     	//printf("DMA Not Running\n");
         /* directly put chunk to DMA transfer & enable */
         pThis->running  = 1;
         pThis->pPending = pChunk;
-        audioTx_dmaConfig(pThis->pPending);  
+        audioTx_dmaConfig(pThis->pPending);
         ENABLE_SPORT0_TX();
     } else {
     	//printf("DMA Running\n");

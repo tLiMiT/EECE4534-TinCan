@@ -104,7 +104,20 @@ void audioRx_isr(void *pThis);
  * @return Zero on success.
  * Negative value on failure.
  */
-int audioRx_get(audioRx_t *pThis, chunk_t **pChunk);
+int audioRx_get(audioRx_t *pThis, chunk_t **ppChunk);
 
+/** audio rx get
+ *    non-blocking
+ *    no copy
+ *    caller is responsible for releasing the buffer
+ *
+ * Parameters:
+ * @param pThis  pointer to own object
+ * @param ppChunk Pointer Pointer to chunk object
+ *
+ * @return Zero on success.
+ * Negative value on failure.
+ */
+int audioRx_getNbNc(audioRx_t *pThis, chunk_t **pChunk);
 
 #endif

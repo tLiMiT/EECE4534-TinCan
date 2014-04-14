@@ -57,7 +57,7 @@ int audioPlayer_init(audioPlayer_t *pThis)
     
     printf("[AP]: Init start\r\n");
     
-    pThis->volume 		= VOLUME_MIN; /*default volume */
+    pThis->volume 		= VOLUME_MAX; /*default volume */
     pThis->frequency 	= SSM2602_SR_8000/2; /* default frequency, need not copy to Left and right channel*/
 
     /* Initialize the core timer */
@@ -153,7 +153,7 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     while(1) {
 
     	/** get audio chunk */
-        status = audioRx_get(&pThis->rx, &pThis->chunk);
+        status = audioRx_getNbNc(&pThis->rx, &pThis->chunk);
 
         /** If we have chunks that can be played then we provide them
          * to the audio TX
