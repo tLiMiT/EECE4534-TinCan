@@ -27,6 +27,7 @@
 #include "startup.h"
 #include "tll_sport.h"
 #include "audioPlayer.h"
+#include "fpga_gpio_uart.h"
 
 /******************************************************************************
  *                     GLOBALS
