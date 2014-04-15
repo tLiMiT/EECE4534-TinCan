@@ -85,7 +85,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
  
     /* Configure the DMA4 for TX (data transfer/memory read) */
     /* Read, 1-D, interrupt enabled, 16 bit transfer, Auto buffer */
-    *pDMA4_CONFIG = WDSIZE_16 | DI_EN; /* 16 bit amd DMA enable */
+    *pDMA4_CONFIG = WDSIZE_16 | DI_EN | FLOW_AUTO; /* 16 bit amd DMA enable */
     
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA4_SPORT0_TX, audioTx_isr, pThis);
@@ -141,11 +141,16 @@ void audioTx_isr(void *pThisArg)
         1. First, attempt to get the new chunk, and check if it's available: */
     	if (queue_get(&pThis->queue, (void**)&pchunk) == PASS) {
     		/* 2. If so, release old chunk on success back to buffer pool */
-    		bufferPool_release(pThis->pBuffP, pThis->pPending);
-
-
-        /* 3. Register the new chunk as pending */
-    		pThis->pPending = pchunk;
+    		if(PASS == bufferPool_release(pThis->pBuffP, pThis->pPending))
+    		{
+    			/* 3. Register the new chunk as pending */
+    			pThis->pPending = pchunk;
+    			//audioTx_dmaConfig(pThis->pPending);
+    		}
+    		else
+    		{
+    			printf("[TX] BP Release Failed!\r\n");
+    		}
     	}
        
     	 // config DMA either with new chunk (if there was one), or with old chunk on empty Q
@@ -169,7 +174,6 @@ void audioTx_isr(void *pThisArg)
  */
 int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 {
-    
     if ( NULL == pThis || NULL == pChunk ) {
         printf("[TX]: Failed to put\r\n");
         return FAIL;
@@ -177,7 +181,7 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
     
     // block if queue is full
     while(queue_is_full(&pThis->queue)) {
-        //printf("[TX]: Queue Full\r\n");
+        printf("[TX]: Queue Full\r\n");
         powerMode_change(PWR_ACTIVE);
         asm("idle;");
     }
@@ -195,7 +199,7 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
     	//printf("DMA Running\n");
         /* DMA is already running, so we need to add chunk to queue
         1. Try to add chunk to queue and check status */
-    	if (queue_put(&pThis->queue, pChunk) != PASS) {
+    	if (FAIL == queue_put(&pThis->queue, pChunk)) {
     		/* 2.  If we could not add chunk to queue because queue is full,
     		return chunk to pool, effectivly dropping the chunk */
 			bufferPool_release(pThis->pBuffP, pChunk);

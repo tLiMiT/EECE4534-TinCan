@@ -122,11 +122,12 @@ int audioRx_start(audioRx_t *pThis)
 //#endif
 		printf("[AUDIO RX]: audioRx_start: implemented\r\n");
 	/* prime the system by getting the first buffer filled */
-	   if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-	         printf("[ARX]: Failed to acquire buffer\n");
-	         return FAIL;
-	   }
-
+		   if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
+				 printf("[ARX]: Failed to acquire buffer\n");
+		   }
+		   int i = 0;
+		   for(i = 0; i < pThis->pPending->bytesMax; i++)
+			   pThis->pPending->u16_buff[i] = 0;
 	     audioRx_dmaConfig(pThis->pPending);
 
 	     // enable the audio transfer
@@ -163,6 +164,7 @@ void audioRx_isr(void *pThisArg)
              * configure the DMA and overwrite last samples.
              * This means the RX packet was dropped */
         	audioRx_dmaConfig(pThis->pPending);
+        	printf("[RX]: Packet Dropped\r\n");
         } else {
 
         	/* 3. Otherwise, attempt to acquire a chunk from the buffer
@@ -178,15 +180,13 @@ void audioRx_isr(void *pThisArg)
 				/* If not successful, then we are out of
 				 * memory because the buffer pool is empty.
 				 */
-				//printf("Buffer pool is empty!\n");
+				printf("Buffer pool is empty!\n");
 			}
         }
 
         *pDMA3_IRQ_STATUS  |= 0x0001;   // clear the interrupt
     }
 }
-
-
 
 /** audio rx get 
  * @brief Read the chunk from the file
@@ -197,52 +197,22 @@ void audioRx_isr(void *pThisArg)
  * @return Zero on success.
  * Negative value on failure.
  */
-int audioRx_get(audioRx_t *pThis, chunk_t **ppChunk)
-{
-///Test code for audio sample.
-/*	int size = 0;
-
-    if (bufferPool_acquire(pThis->pBuffP, pChunk) != PASS) {
-        printf("Could not acquire chunk for audio sample\n");
-        return FAIL;
-    }
-
-#ifdef ENABLE_FILE_STUB
-    size = audioRx_fileRead(pThis->audioRx_pFile, *pChunk);
-#else
-    size = audioSample_get(&pThis->audioSample, *pChunk);
-#endif
-*/
-		chunk_t                  *chunk_rx;
-
-		/* Block till a chunk arrives on the rx queue */
-		while( queue_is_empty(&pThis->queue) ) {
-			asm("nop;");
-		}
-
-		if(PASS == queue_get(&pThis->queue, (void**)&chunk_rx))
-			printf("[ARX]: Got chunk from queue\n");
-
-		chunk_copy(chunk_rx, *ppChunk);
-		printf("ppChunk: %i\n", (*ppChunk)->u16_buff[0]);
-
-		if ( FAIL == bufferPool_release(pThis->pBuffP, chunk_rx) ) {
-			printf("[ARX]: Failed to release chunk to pool");
-			return FAIL;
-		}
-
-		return PASS;
-    }
-
 int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
 {
-
+	int retval = FAIL;
     // check if something in queue
-    if(queue_is_empty(&pThis->queue)){
-    	return FAIL;
-    } else {
-        queue_get(&pThis->queue, (void**)ppChunk);
-        return PASS;
+    if(queue_is_empty(&pThis->queue))
+    {
+    	return retval;
     }
+    else {
+        if(PASS == queue_get(&pThis->queue, (void**)ppChunk))
+        	retval = PASS;
+        else
+        {
+        	printf("[RX]: Failed to get chunk\r\n");
+        }
+    }
+    return retval;
 }
 

@@ -148,18 +148,17 @@ int audioPlayer_start(audioPlayer_t *pThis)
  **/
 void audioPlayer_run (audioPlayer_t *pThis) {
     
-	int                      status = FAIL;
-    
     while(1) {
 
+    	int audioRxPlaced = 0;
     	/** get audio chunk */
-        status = audioRx_getNbNc(&pThis->rx, &pThis->chunk);
-
-        /** If we have chunks that can be played then we provide them
-         * to the audio TX
-         */
-        if ( PASS == status ) {
-          /** play audio chunk through speakers */
+    	if(!queue_is_empty(&pThis->rx.queue))
+    	{
+    		if(PASS == audioRx_getNbNc(&pThis->rx, &pThis->chunk))
+    			audioRxPlaced = 1;
+    	}
+    	if(pThis->chunk && audioRxPlaced)
+        {
           audioTx_put(&pThis->tx, pThis->chunk);
         }
     }
