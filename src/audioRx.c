@@ -23,7 +23,6 @@
 #include <tll_sport.h>
 #include <queue.h>
 #include <power_mode.h>
-#include <audioSample.h>
 
 /** 
  * Configures the DMA rx with the buffer and the buffer length to 
@@ -36,22 +35,23 @@
 void audioRx_dmaConfig(chunk_t *pchunk)
 {
 	/* 1. Disable DMA 3*/
-	*pDMA3_CONFIG &= ~(DMAEN);
+	DISABLE_DMA(*pDMA3_CONFIG);
 
 	/* 2. Configure start address */
 	*pDMA3_START_ADDR = &pchunk->u16_buff[0];
 
 	/* 3. set X count */
-	*pDMA3_X_COUNT = pchunk->bytesUsed/2;
+	*pDMA3_X_COUNT = 2;
+	*pDMA3_Y_COUNT = pchunk->size/2; // 16 bit data so we change the stride and count
 
 	/* 4. set X modify */
-	*pDMA3_X_MODIFY = 2;
+	*pDMA3_X_MODIFY = 0;
+	*pDMA3_Y_MODIFY = 2;
 
 	/* 5 Re-enable DMA */
-	*pDMA3_CONFIG |= DMAEN;
+	ENABLE_DMA(*pDMA3_CONFIG);
 
 }
-
 
 
 
@@ -83,12 +83,12 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
     if(FAIL == queue_init(&pThis->queue, AUDIORX_QUEUE_DEPTH))
     	printf("[ARX]: Queue init failed\n");
 
-    *pDMA3_CONFIG = WDSIZE_16 | DI_EN | WNR | FLOW_AUTO; /* 16 bit amd DMA enable */
+    *pDMA3_CONFIG = WDSIZE_16 | DI_EN | WNR | DMA2D; /* 16 bit and DMA enable */
 
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA3_SPORT0_RX, audioRx_isr, pThis);
 
-    printf("[ARX]: RX init complete\r\r\n");
+    printf("[ARX]: RX init complete \r\n");
     
     return PASS;
 }
@@ -109,32 +109,20 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
  */
 int audioRx_start(audioRx_t *pThis)
 {
+	printf("[ARX]: audioRx_start: implemented \r\n");
 
-//#ifdef ENABLE_FILE_STUB
-	//pThis->audioRx_pFile = fopen(FILE_NAME, "rb");
-   // if(NULL == pThis->audioRx_pFile) {
-   //     printf("Can't open files: %s\r\n",FILE_NAME);
-   // }
-   // fseek(pThis->audioRx_pFile, 44, SEEK_SET); // remove wav header
-//#else
-//    pThis->audioSample.count = 44; /** we skip the wave header we assume that the data is
-//                             16 bit mono*/
-//#endif
-		printf("[AUDIO RX]: audioRx_start: implemented\r\n");
 	/* prime the system by getting the first buffer filled */
-		   if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-				 printf("[ARX]: Failed to acquire buffer\n");
-		   }
-		   int i = 0;
-		   for(i = 0; i < pThis->pPending->bytesMax; i++)
-			   pThis->pPending->u16_buff[i] = 0;
-	     audioRx_dmaConfig(pThis->pPending);
+	if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
+		printf("[ARX]: Failed to acquire buffer\n");
+		return FAIL;
+	}
 
-	     // enable the audio transfer
-	     ENABLE_SPORT0_RX();
+	audioRx_dmaConfig(pThis->pPending);
 
-	     return PASS;
+	// enable the audio transfer
+	ENABLE_SPORT0_RX();
 
+	return PASS;
 }
 
 
@@ -148,29 +136,30 @@ int audioRx_start(audioRx_t *pThis)
  */
 void audioRx_isr(void *pThisArg)
 {
-	//printf("RX ISR\n");
+	//printf("[ARX]; RX ISR \r\n");
+
 	// local pThis to avoid constant casting
 	audioRx_t *pThis  = (audioRx_t*) pThisArg;
 
 	if ( *pDMA3_IRQ_STATUS & 0x1 ) {
-		//  chunk is now filled, so update the length
-        pThis->pPending->bytesUsed = pThis->pPending->bytesMax;
 
-        /* 1. Attempt to insert the pending chunk previously read by the
-         * DMA RX into the RX QUEUE and a data is inserted to queue
+		//  chunk is now filled, so update the length
+        pThis->pPending->len = pThis->pPending->size;
+
+        /* Insert the chunk previously read by the DMA RX on the
+         * RX QUEUE and a data is inserted to queue
          */
-        if (queue_put(&pThis->queue, pThis->pPending) == FAIL) {
-            /* 2. If chunk could not be inserted into the queue,
-             * configure the DMA and overwrite last samples.
-             * This means the RX packet was dropped */
+        if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
+
+        	// reuse the same buffer and overwrite last samples
         	audioRx_dmaConfig(pThis->pPending);
-        	printf("[RX]: Packet Dropped\r\n");
+        	printf("[ARX INT]: RX Packet Dropped \r\n");
         } else {
 
-        	/* 3. Otherwise, attempt to acquire a chunk from the buffer
+        	/* Otherwise, attempt to acquire a chunk from the buffer
 			 * pool.
 			 */
-			if (bufferPool_acquire(pThis->pBuffP, &pThis->pPending) == PASS) {
+			if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending) ) {
 				/* If successful, configure the DMA to write
 				 * to this chunk.
 				 */
@@ -183,12 +172,48 @@ void audioRx_isr(void *pThisArg)
 				printf("Buffer pool is empty!\n");
 			}
         }
-
         *pDMA3_IRQ_STATUS  |= 0x0001;   // clear the interrupt
     }
 }
 
-/** audio rx get 
+
+/** audio rx get
+ *   copies a filled chunk into pChunk
+ *   blocking call, blocks if queue is empty
+ *     - get from queue
+ *     - copy in to pChunk
+ *     - release chunk to buffer pool
+ * Parameters:
+ * @param pThis  pointer to own object
+ * @param pChunk Pointer to chunk object
+ *
+ * @return Zero on success.
+ * Negative value on failure.
+ */
+int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
+{
+    chunk_t *chunk_rx;
+
+    /* Block till a chunk arrives on the rx queue */
+    while( queue_is_empty(&pThis->queue) ) {
+        powerMode_change(PWR_ACTIVE);
+        asm("idle;");
+    }
+    powerMode_change(PWR_FULL_ON);
+
+    queue_get(&pThis->queue, (void**)&chunk_rx);
+
+    chunk_copy(chunk_rx, pChunk);
+
+    if ( FAIL == bufferPool_release(pThis->pBuffP, chunk_rx) ) {
+        return FAIL;
+    }
+    return PASS;
+}
+
+
+/** audio rx get (no block, no copy)
+ *
  * @brief Read the chunk from the file
  * Parameters:
  * @param pThis  pointer to own object
@@ -210,7 +235,7 @@ int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
         	retval = PASS;
         else
         {
-        	printf("[RX]: Failed to get chunk\r\n");
+        	printf("[ARX]: Failed to get chunk\r\n");
         }
     }
     return retval;

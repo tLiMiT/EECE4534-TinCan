@@ -34,21 +34,22 @@
 void audioTx_dmaConfig(chunk_t *pchunk)
 {
 	/* 1. Disable DMA 4*/
-	*pDMA4_CONFIG &= ~DMAEN;
+	DISABLE_DMA(*pDMA4_CONFIG);
 
 	/* 2. Configure start address */
 	*pDMA4_START_ADDR = &pchunk->u16_buff[0];
 
 	/* 3. set X count */
-	*pDMA4_X_COUNT = pchunk->bytesUsed/2;
+	*pDMA4_X_COUNT = 2;//pchunk->bytesUsed/2;
+	*pDMA4_Y_COUNT = pchunk->len/2; // 16 bit data so we change the stride and count
    
 	/* 4. set X modify */
-	*pDMA4_X_MODIFY = 2;
+	*pDMA4_X_MODIFY = 0;
+	*pDMA4_Y_MODIFY = 2;
    
 	/* 5. Re-enable DMA */
-	*pDMA4_CONFIG |= DMAEN;
+	ENABLE_DMA(*pDMA4_CONFIG);
 
-	//printf("DMA Config Complete\n");
 }
 
 
@@ -70,7 +71,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 {
     // paramter checking
     if ( NULL == pThis || NULL == pBuffP || NULL == pIsrDisp) {
-        printf("[ATX]: Failed init\r\n");
+        printf("[ATX]: Failed init \r\n");
         return FAIL;
     }
     
@@ -85,12 +86,12 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
  
     /* Configure the DMA4 for TX (data transfer/memory read) */
     /* Read, 1-D, interrupt enabled, 16 bit transfer, Auto buffer */
-    *pDMA4_CONFIG = WDSIZE_16 | DI_EN | FLOW_AUTO; /* 16 bit amd DMA enable */
+    *pDMA4_CONFIG = WDSIZE_16 | DI_EN | DMA2D; /* 16 bit and DMA enable */
     
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA4_SPORT0_TX, audioTx_isr, pThis);
     
-    printf("[ARX]: TX init complete\r\n");
+    printf("[ATX]: TX init complete \r\n");
     
     return PASS;
 }
@@ -108,7 +109,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 int audioTx_start(audioTx_t *pThis)
 {
      
-    printf("[AUDIO TX]: audioTx_start: implemented\r\n");
+    printf("[ATX]: audioTx_start: implemented \r\n");
 
     // empty nothing to be done, DMA kicked off during run time 
     return PASS;   
@@ -131,32 +132,30 @@ void audioTx_isr(void *pThisArg)
     // create local casted pThis to avoid casting on every single access
     audioTx_t  *pThis = (audioTx_t*) pThisArg;
 
-    chunk_t                  *pchunk              = NULL;
+    chunk_t *pchunk = NULL;
+
     // validate that TX DMA IRQ was triggered 
     if ( *pDMA4_IRQ_STATUS & 0x1  ) {
         //printf("[TXISR]\n");
         /* We need to remove the data from the queue and create space for more data
-           (The data was read previously by the DMA)
+         * (The data was read previously by the DMA)
 
         1. First, attempt to get the new chunk, and check if it's available: */
-    	if (queue_get(&pThis->queue, (void**)&pchunk) == PASS) {
+    	if (PASS == queue_get(&pThis->queue, (void **)&pchunk) ) {
     		/* 2. If so, release old chunk on success back to buffer pool */
-    		if(PASS == bufferPool_release(pThis->pBuffP, pThis->pPending))
-    		{
-    			/* 3. Register the new chunk as pending */
-    			pThis->pPending = pchunk;
-    			//audioTx_dmaConfig(pThis->pPending);
-    		}
-    		else
-    		{
-    			printf("[TX] BP Release Failed!\r\n");
-    		}
+    		bufferPool_release(pThis->pBuffP, pThis->pPending);
+
+    		/* 3. Register the new chunk as pending */
+    		pThis->pPending = pchunk;
+
+    	} else {
+    		printf("[ATX]: TX Queue Empty! \r\n");
     	}
-       
-    	 // config DMA either with new chunk (if there was one), or with old chunk on empty Q
-    	 audioTx_dmaConfig(pThis->pPending);
 
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
+
+        // config DMA either with new chunk (if there was one), or with old chunk on empty Q
+        audioTx_dmaConfig(pThis->pPending);
     }
 }
 
@@ -164,7 +163,7 @@ void audioTx_isr(void *pThisArg)
 
 
 /** audio tx put
- *   copyies filled pChunk into the TX queue for transmission
+ *   copies filled pChunk into the TX queue for transmission
  *    if queue is full, then chunk is dropped 
  * Parameters:
  * @param pThis  pointer to own object
@@ -174,37 +173,46 @@ void audioTx_isr(void *pThisArg)
  */
 int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 {
+	chunk_t *pchunk_temp = NULL;
+
     if ( NULL == pThis || NULL == pChunk ) {
-        printf("[TX]: Failed to put\r\n");
+        printf("[ATX]: Failed to put \r\n");
         return FAIL;
     }
     
     // block if queue is full
     while(queue_is_full(&pThis->queue)) {
-        printf("[TX]: Queue Full\r\n");
+        printf("[ATX]: Queue Full \r\n");
         powerMode_change(PWR_ACTIVE);
         asm("idle;");
     }
     powerMode_change(PWR_FULL_ON);
 
-    /* If DMA not running ? */
-    if ( 0 == pThis->running ) {
-    	//printf("DMA Not Running\n");
-        /* directly put chunk to DMA transfer & enable */
-        pThis->running  = 1;
-        pThis->pPending = pChunk;
-        audioTx_dmaConfig(pThis->pPending);
-        ENABLE_SPORT0_TX();
+    // get free chunk from pool
+    if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
+    	// copy chunk into free buffer for queue
+    	chunk_copy(pChunk, pchunk_temp);
+
+    	/* If DMA not running ? */
+        if ( 0 == pThis->running ) {
+        	/* directly put chunk to DMA transfer & enable */
+        	pThis->running  = 1;
+            pThis->pPending = pchunk_temp;
+            audioTx_dmaConfig(pThis->pPending);
+            ENABLE_SPORT0_TX();
+
+        } else {
+        	/* DMA already running add chunk to queue */
+            if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
+            	// return chunk to pool if queue is full, effectively dropping the chunk
+                bufferPool_release(pThis->pBuffP, pchunk_temp);
+                return FAIL;
+            }
+        }
+
     } else {
-    	//printf("DMA Running\n");
-        /* DMA is already running, so we need to add chunk to queue
-        1. Try to add chunk to queue and check status */
-    	if (FAIL == queue_put(&pThis->queue, pChunk)) {
-    		/* 2.  If we could not add chunk to queue because queue is full,
-    		return chunk to pool, effectivly dropping the chunk */
-			bufferPool_release(pThis->pBuffP, pChunk);
-			printf("TX Queue Full\n");
-		}
+    	// drop if we don't get free space
+    	printf("[ATX]: failed to get buffer \r\n");
     }
     
     return PASS;

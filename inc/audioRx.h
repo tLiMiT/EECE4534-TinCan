@@ -20,7 +20,6 @@
 #include "queue.h"
 #include "bufferPool.h"
 #include "isrDisp.h"
-#include <audioSample.h>
 
 /***************************************************
             DEFINES
@@ -102,7 +101,7 @@ void audioRx_isr(void *pThis);
  * @return Zero on success.
  * Negative value on failure.
  */
-int audioRx_get(audioRx_t *pThis, chunk_t **ppChunk);
+int audioRx_get(audioRx_t *pThis, chunk_t *pChunk);
 
 /** audio rx get
  *    non-blocking

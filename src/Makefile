@@ -1,38 +1,44 @@
 #############################################################################
-# Makefile: lab4/audio_dma_queue/src				  					            #
+# Makefile: TinCan: PAL XBee Phone				  					            #
 #############################################################################
 #
-# Aug 11, 2011 <agarwal>  Add description.
+# Mark Hatch
+# Tim Liming
 #	
 
 # set CC to cross compiler 
 CC = bfin-elf-gcc
 
 # -- Compile Flags
-CFLAGS = -Wall -specs=$(TLL6527M_C_DIR)/common/inc/spec/tll6527m 
+CFLAGS =  -specs=$(TLL6527M_C_DIR)/common/inc/spec/tll6527m 
+
 # add debug flag 
 CFLAGS += -g
 
+# -- dir to common directory
+LIB_DIR = $(TLL6527M_C_DIR)/common
+LDSP_DIR = $(TLL6527M_C_DIR)/ldsp
 
 # -- Include Path
-INC_PATH = -I ../inc
+INC_PATH = -I ../inc -I $(LIB_DIR)/inc  -I $(LDSP_DIR)/include
 
 # -- Objects 
-OBJS =   main.o \
-         audioPlayer.o \
-         audioRx.o \
-         audioTx.o \
-         audioSample.o
+OBJS =  main.o \
+        audioPlayer.o \
+        audioRx.o \
+        audioTx.o \
+        bufferPool.o \
+        chunk.o 
 
 # --- Libraries 	
-LIBS     = -ltll6527mC   
+LIB_PATH = -L $(LIB_DIR)/lib -L $(LDSP_DIR)/lib 
+LIBS     = -ltll6527mC  -lbfdsp -lbffastfp  
 
 # --- name of final binary 
-TARGET = audio_dma_queue_skel
+TARGET = TinCan
 
 # Linker file 
 LDFLAGS = -T$(TLL6527M_C_DIR)/common/inc/spec/tll6527m_sdram.lds
-#LDFLAGS = -T../$(TARGET).lds
 
 # check that TLL6527M_C_DIR variable is defined before starting
 ifeq ($(TLL6527M_C_DIR),)

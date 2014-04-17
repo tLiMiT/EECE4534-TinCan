@@ -26,9 +26,9 @@
 
 /**
  * @def I2C_CLK
- * @brief Configure I2C clock to run at 100KHz
+ * @brief Configure I2C clock to run at 400KHz
   */
-#define I2C_CLOCK   (100*_1KHZ)
+#define I2C_CLOCK   (400*_1KHZ)
 /**
  * @def VOLUME_CHANGE_STEP
  * @brief Magnitude of change in the volume when increasing or decreasing
@@ -55,7 +55,7 @@ int audioPlayer_init(audioPlayer_t *pThis)
 {
     int                         status                  = 0;
     
-    printf("[AP]: Init start\r\n");
+    printf("[AP]: Init start \r\n");
     
     pThis->volume 		= VOLUME_MAX; /*default volume */
     pThis->frequency 	= SSM2602_SR_8000/2; /* default frequency, need not copy to Left and right channel*/
@@ -75,7 +75,8 @@ int audioPlayer_init(audioPlayer_t *pThis)
     /* Initialize the SSM2602 over the I2C interface */
     /* Initialize the SSM2602 to playback audio data */
     /* Initialize sport0 to receive audio data */
-    status = ssm2602_init(&pThis->isrDisp, pThis->volume, pThis->frequency, SSM2602_TX);
+    //status = ssm2602_init(&pThis->isrDisp, pThis->volume, pThis->frequency, SSM2602_TX);
+    status = ssm2602_init(&pThis->isrDisp, 0x27, SSM2602_SR_16000, SSM2602_RX|SSM2602_TX);
     if (PASS != status) {
         printf("SSM2602 init failed\r\n");
         return status;
@@ -94,7 +95,7 @@ int audioPlayer_init(audioPlayer_t *pThis)
     }
 
     /* Initialize the audio RX module*/
-    status = audioRx_init(&pThis->rx, &pThis->bp, &pThis->isrDisp) ;
+    status = audioRx_init(&pThis->rx, &pThis->bp, &pThis->isrDisp);
     if ( PASS != status) {
         return FAIL;
     }
@@ -147,20 +148,34 @@ int audioPlayer_start(audioPlayer_t *pThis)
  *@return 0 success, non-zero otherwise
  **/
 void audioPlayer_run (audioPlayer_t *pThis) {
+
+	printf("[AP]: running \r\n");
+
+	chunk_t chunk;
+
+	// init local chunk
+	chunk_init(&chunk);
     
     while(1) {
 
-    	int audioRxPlaced = 0;
+//    	int audioRxPlaced = 0;
+//    	/** get audio chunk */
+//    	if(!queue_is_empty(&pThis->rx.queue))
+//    	{
+//    		if(PASS == audioRx_getNbNc(&pThis->rx, &pThis->chunk))
+//    			audioRxPlaced = 1;
+//    	}
+//    	if(pThis->chunk && audioRxPlaced)
+//        {
+//          audioTx_put(&pThis->tx, pThis->chunk);
+//          audioRxPlaced = 0;
+//        }
+
     	/** get audio chunk */
-    	if(!queue_is_empty(&pThis->rx.queue))
-    	{
-    		if(PASS == audioRx_getNbNc(&pThis->rx, &pThis->chunk))
-    			audioRxPlaced = 1;
-    	}
-    	if(pThis->chunk && audioRxPlaced)
-        {
-          audioTx_put(&pThis->tx, pThis->chunk);
-        }
+    	audioRx_get(&pThis->rx, &chunk);
+
+    	/** play audio chunk through speakers */
+    	audioTx_put(&pThis->tx, &chunk);
     }
 }
 
