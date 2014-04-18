@@ -72,7 +72,7 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
                  isrDisp_t *pIsrDisp)
 {
     if ( NULL == pThis || NULL == pBuffP || NULL == pIsrDisp) {
-        printf("[ARX]: Failed init\r\n");
+        printf("[Audio RX]: Failed init\r\n");
         return FAIL;
     }
     
@@ -81,14 +81,14 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
     
     // init queue with 
     if(FAIL == queue_init(&pThis->queue, AUDIORX_QUEUE_DEPTH))
-    	printf("[ARX]: Queue init failed\n");
+    	printf("[Audio RX]: Queue init failed\n");
 
     *pDMA3_CONFIG = WDSIZE_16 | DI_EN | WNR | DMA2D; /* 16 bit and DMA enable */
 
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA3_SPORT0_RX, audioRx_isr, pThis);
 
-    printf("[ARX]: RX init complete \r\n");
+    printf("[Audio RX]: RX init complete \r\n");
     
     return PASS;
 }
@@ -109,11 +109,11 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
  */
 int audioRx_start(audioRx_t *pThis)
 {
-	printf("[ARX]: audioRx_start: implemented \r\n");
+	printf("[Audio RX]: audioRx_start: implemented \r\n");
 
 	/* prime the system by getting the first buffer filled */
 	if ( FAIL == bufferPool_acquire(pThis->pBuffP, &pThis->pPending ) ) {
-		printf("[ARX]: Failed to acquire buffer\n");
+		printf("[Audio RX]: Failed to acquire buffer\n");
 		return FAIL;
 	}
 
@@ -139,7 +139,7 @@ void audioRx_isr(void *pThisArg)
 	//printf("[ARX]; RX ISR \r\n");
 
 	// local pThis to avoid constant casting
-	audioRx_t *pThis  = (audioRx_t*) pThisArg;
+	audioRx_t *pThis = (audioRx_t*) pThisArg;
 
 	if ( *pDMA3_IRQ_STATUS & 0x1 ) {
 
@@ -172,7 +172,7 @@ void audioRx_isr(void *pThisArg)
 				printf("Buffer pool is empty!\n");
 			}
         }
-        *pDMA3_IRQ_STATUS  |= 0x0001;   // clear the interrupt
+        *pDMA3_IRQ_STATUS |= 0x0001;   // clear the interrupt
     }
 }
 
@@ -235,7 +235,7 @@ int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
         	retval = PASS;
         else
         {
-        	printf("[ARX]: Failed to get chunk\r\n");
+        	printf("[Audio RX]: Failed to get chunk\r\n");
         }
     }
     return retval;

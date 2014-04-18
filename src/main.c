@@ -37,7 +37,8 @@
  * @brief  global audio player object
  */
 audioPlayer_t            audioPlayer;
-    
+
+
 /** 
  *
  * Main function for audio playback

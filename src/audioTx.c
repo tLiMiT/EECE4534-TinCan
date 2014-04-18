@@ -69,9 +69,9 @@ void audioTx_dmaConfig(chunk_t *pchunk)
 int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP, 
                  isrDisp_t *pIsrDisp)
 {
-    // paramter checking
-    if ( NULL == pThis || NULL == pBuffP || NULL == pIsrDisp) {
-        printf("[ATX]: Failed init \r\n");
+    // parameter checking
+    if ( NULL == pThis || NULL == pBuffP || NULL == pIsrDisp ) {
+        printf("[Audio TX]: Failed init \r\n");
         return FAIL;
     }
     
@@ -85,13 +85,13 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
     queue_init(&pThis->queue, AUDIOTX_QUEUE_DEPTH);   
  
     /* Configure the DMA4 for TX (data transfer/memory read) */
-    /* Read, 1-D, interrupt enabled, 16 bit transfer, Auto buffer */
+    /* Read, 2-D, interrupt enabled, 16 bit transfer, Auto buffer */
     *pDMA4_CONFIG = WDSIZE_16 | DI_EN | DMA2D; /* 16 bit and DMA enable */
     
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA4_SPORT0_TX, audioTx_isr, pThis);
     
-    printf("[ATX]: TX init complete \r\n");
+    printf("[Audio TX]: TX init complete \r\n");
     
     return PASS;
 }
@@ -99,7 +99,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 
 
 /** start audio tx
- *   - empthy for now
+ *   - empty for now
  * Parameters:
  * @param pThis  pointer to own object
  *
@@ -109,7 +109,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
 int audioTx_start(audioTx_t *pThis)
 {
      
-    printf("[ATX]: audioTx_start: implemented \r\n");
+    printf("[Audio TX]: audioTx_start: implemented \r\n");
 
     // empty nothing to be done, DMA kicked off during run time 
     return PASS;   
@@ -121,7 +121,7 @@ int audioTx_start(audioTx_t *pThis)
  *   - get chunk from tx queue
  *    - if valid, release old pending chunk to buffer pool 
  *    - configure DMA 
- *    - if not valide, configure DMA to replay same chunk again
+ *    - if not valid, configure DMA to replay same chunk again
  * Parameters:
  * @param pThis  pointer to own object
  *
@@ -149,7 +149,7 @@ void audioTx_isr(void *pThisArg)
     		pThis->pPending = pchunk;
 
     	} else {
-    		printf("[ATX]: TX Queue Empty! \r\n");
+    		printf("[Audio TX]: TX Queue Empty! \r\n");
     	}
 
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
@@ -176,13 +176,13 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 	chunk_t *pchunk_temp = NULL;
 
     if ( NULL == pThis || NULL == pChunk ) {
-        printf("[ATX]: Failed to put \r\n");
+        printf("[Audio TX]: Failed to put \r\n");
         return FAIL;
     }
     
     // block if queue is full
     while(queue_is_full(&pThis->queue)) {
-        printf("[ATX]: Queue Full \r\n");
+        printf("[Audio TX]: Queue Full \r\n");
         powerMode_change(PWR_ACTIVE);
         asm("idle;");
     }
@@ -212,7 +212,7 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 
     } else {
     	// drop if we don't get free space
-    	printf("[ATX]: failed to get buffer \r\n");
+    	printf("[Audio TX]: failed to get buffer \r\n");
     }
     
     return PASS;
