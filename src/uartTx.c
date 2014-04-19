@@ -36,12 +36,12 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	*pDMA11_START_ADDR = &pChunk->u16_buff; // should this match audioTx?
 
 	/* 3. set X count */
-	*pDMA11_X_COUNT = pChunk->len;	// should this match audioTx?
-	//*pDMA11_Y_COUNT = 2;
+	*pDMA11_X_COUNT = 2; // should this match audioTx?
+	*pDMA11_Y_COUNT = pChunk->len/2;;
 
 	/* 4. set X modify */
-	*pDMA11_X_MODIFY = 1;
-	//*pDMA11_Y_MODIFY = 2;
+	*pDMA11_X_MODIFY = 0;
+	*pDMA11_Y_MODIFY = 2;
 
 	/* 5. enable interrupt register */
 	*pUART1_IER |= ETBEI;
@@ -167,27 +167,38 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 
 	    // block if queue is full
 	    while(queue_is_full(&pThis->queue)) {
-	        printf("[Audio TX]: Queue Full \r\n");
+	        printf("[UART TX]: Queue Full \r\n");
 	        powerMode_change(PWR_ACTIVE);
 	        asm("idle;");
 	    }
 	    powerMode_change(PWR_FULL_ON);
 
 	    // get free chunk from pool
-	    if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
-	    	// copy chunk into free buffer for queue
-	    	chunk_copy(pChunk, pchunk_temp);
+		if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
+			// copy chunk into free buffer for queue
+			chunk_copy(pChunk, pchunk_temp);
 
-			/* DMA already running add chunk to queue */
-			if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
-				// return chunk to pool if queue is full, effectively dropping the chunk
-				bufferPool_release(pThis->pBuffP, pchunk_temp);
-				return FAIL;
+			/* If DMA not running ? */
+			if ( 0 == pThis->running ) {
+				/* directly put chunk to DMA transfer & enable */
+				pThis->running  = 1;
+				pThis->pPending = pchunk_temp;
+				audioTx_dmaConfig(pThis->pPending);
+				ENABLE_SPORT0_TX();
+
 			} else {
-				// drop if we don't get free space
-				printf("[Audio TX]: failed to get buffer \r\n");
+				/* DMA already running add chunk to queue */
+				if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
+					// return chunk to pool if queue is full, effectively dropping the chunk
+					bufferPool_release(pThis->pBuffP, pchunk_temp);
+					return FAIL;
+				}
 			}
-	    }
+
+		} else {
+			// drop if we don't get free space
+			printf("[Audio TX]: failed to get buffer \r\n");
+		}
 
 	    return PASS;
 

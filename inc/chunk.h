@@ -24,7 +24,7 @@
  * @def SAMPLE_SIZE
  * @brief Size of one chunk
  */
-#define SAMPLE_SIZE                 (1024*2)
+#define SAMPLE_SIZE		(1024*2)
 
 /**
  * Chunk status enumeration 

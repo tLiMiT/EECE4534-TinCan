@@ -24,6 +24,7 @@ typedef struct {
   queue_t        queue;  	/* queue for received buffers */
   chunk_t        *pPending; /* pointer to pending chunk just in receiving */
   bufferPool_t   *pBuffP; 	/* pointer to buffer pool */
+  int 			running;
 } uartTx_t;
 
 

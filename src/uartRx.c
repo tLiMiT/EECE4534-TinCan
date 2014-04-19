@@ -33,15 +33,15 @@ void uartRx_dmaConfig(chunk_t *pChunk)
 	DISABLE_DMA(*pDMA10_CONFIG);
 
 	/* 2. Configure start address */
-	*pDMA10_START_ADDR = &pChunk->u16_buff[0];;	// should this match audioRx?
+	*pDMA10_START_ADDR = &pChunk->u16_buff[0];	// should this match audioRx?
 
 	/* 3. set X count */
 	*pDMA10_X_COUNT = 2;
-	//*pDMA10_Y_COUNT = 2;
+	*pDMA10_Y_COUNT = pChunk->size/2; // 16 bit data so we change the stride and count
 
 	/* 4. set X modify */
-	*pDMA10_X_MODIFY = 1;
-	//*pDMA10_Y_MODIFY = 2;
+	*pDMA10_X_MODIFY = 0;
+	*pDMA10_Y_MODIFY = 2;
 
 	/* 5. enable interrupt register */
 	*pUART1_IER |= ERBFI;
@@ -143,7 +143,7 @@ void uartRx_isr(void *pThisArg)
 
         	// reuse the same buffer and overwrite last samples
         	uartRx_dmaConfig(pThis->pPending);
-        	printf("[ARX INT]: RX Packet Dropped \r\n");
+        	printf("[UART RX INT]: RX Packet Dropped \r\n");
         } else {
 
         	/* Otherwise, attempt to acquire a chunk from the buffer
