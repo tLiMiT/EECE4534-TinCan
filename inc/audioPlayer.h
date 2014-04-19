@@ -21,6 +21,8 @@
 #include <bufferPool.h>
 #include <audioRx.h>
 #include <audioTx.h>
+#include <uartRx.h>
+#include <uartTx.h>
 #include <ssm2602.h>
 
 
@@ -30,11 +32,14 @@
 typedef struct {
   audioRx_t      	rx;  /* receive object */
   audioTx_t      	tx;  /* transmit object */
+  uartRx_t			uartRx;
+  uartTx_t			uartTx;
   bufferPool_t   	bp;  /* buffer pool */
   isrDisp_t      	isrDisp; /* dispatcher for Rx Tx ISR */
   int 					volume;	/* Volume of the audio player */
   eSsm2602SampleFreq 	frequency;	/* Frequency of the audio player */
-  chunk_t            *chunk;  /* Chunk for copy */
+  chunk_t            *receiveChunk;  /* Chunk for copy */
+  chunk_t			*transmitChunk;
 } audioPlayer_t;
 
 /** initialize audio player 

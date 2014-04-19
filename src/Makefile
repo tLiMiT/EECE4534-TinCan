@@ -28,7 +28,9 @@ OBJS =  main.o \
         audioRx.o \
         audioTx.o \
         bufferPool.o \
-        chunk.o 
+        chunk.o \
+        uartRx.o \
+        uartTx.o
         
 
 # --- Libraries 	

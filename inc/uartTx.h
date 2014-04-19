@@ -87,3 +87,5 @@ void uartTx_isr(void *pThisArg);
  * Negative value on failure.
  */
 int uartTx_put(uartTx_t *pThis, chunk_t *pChunk);
+
+#endif

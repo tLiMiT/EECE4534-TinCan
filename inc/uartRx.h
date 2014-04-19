@@ -38,7 +38,7 @@ typedef struct {
  *
  * @return void
  */
-void uartRx_dmaConfig(char* cPtr);
+void uartRx_dmaConfig(chunk_t* cPtr);
 
 /** Initialize uart rx
  *    - get pointer to buffer pool
@@ -92,3 +92,4 @@ void uartRx_isr(void *pThisArg);
  */
 int uartRx_get(uartRx_t *pThis, chunk_t *pChunk);
 
+#endif

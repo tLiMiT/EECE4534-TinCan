@@ -106,6 +106,18 @@ int audioPlayer_init(audioPlayer_t *pThis)
         return FAIL;
     }   
     
+    /* Initialize the UART TX module */
+    status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
+    if ( PASS != status ) {
+            return FAIL;
+    }
+
+    /* Initialize the UART RX module */
+	status = uartRx_init(&pThis->uartRx, &pThis->bp, &pThis->isrDisp);
+	if ( PASS != status ) {
+			return FAIL;
+	}
+
     printf("[AP]: Init complete\r\n");
 
     return PASS;
@@ -136,6 +148,18 @@ int audioPlayer_start(audioPlayer_t *pThis)
 	if ( PASS != status) {
         return FAIL;
     }
+
+	/*Start the UART RX Module */
+	status = uartRx_start(&pThis->uartRx);
+	if (PASS != status){
+		return FAIL;
+	}
+
+	/*Start the UART TX Module */
+	status = uartTx_start(&pThis->uartTx);
+	if(PASS != status){
+		return FAIL;
+	}
     
     return PASS;
 }
@@ -151,18 +175,26 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 
 	printf("[AP]: running \r\n");
 
-	chunk_t chunk;
+	chunk_t receiveChunk;
+	chunk_t transmitChunk;
 
 	// init local chunk
-	chunk_init(&chunk);
+	chunk_init(&receiveChunk);
+	chunk_init(&transmitChunk);
     
     while(1) {
 
     	/** get audio chunk */
-    	audioRx_get(&pThis->rx, &chunk);
+    	audioRx_get(&pThis->rx, &transmitChunk);
+
+    	/* Send UART chunk */
+    	uartTx_put(&pThis->uartTx, &transmitChunk);
+
+    	/* Receive UART chunk */
+    	uartRx_get(&pThis->uartRx, &receiveChunk);
 
     	/** play audio chunk through speakers */
-    	audioTx_put(&pThis->tx, &chunk);
+    	audioTx_put(&pThis->tx, &receiveChunk);
     }
 }
 
