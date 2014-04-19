@@ -38,7 +38,7 @@ int chunk_init(chunk_t *pThis)
 }
 
 
-/** copy on chunk into nother 
+/** copy on chunk into another
  *@param pSrc  pointer to source object (will not be modified)
  *@param pDst  pointer to destination object (will get the data of the src object)
  *
@@ -48,7 +48,7 @@ int chunk_copy(chunk_t *pSrc, chunk_t *pDst){
     unsigned int count;
     unsigned int len = pSrc->len/4;
     
-    // copy manuall since memcpy does not work currently 
+    // copy manually since memcpy does not work currently
     // 
     for ( count = 0; len > count; count++ ) {
         pDst->u32_buff[count] = pSrc->u32_buff[count];

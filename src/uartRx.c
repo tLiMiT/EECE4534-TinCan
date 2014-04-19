@@ -27,19 +27,21 @@
  *
  * @return void
  */
-void uartRx_dmaConfig(char* cPtr)
+void uartRx_dmaConfig(chunk_t *pChunk)
 {
 	/* 1. Disable DMA 10 */
 	DISABLE_DMA(*pDMA10_CONFIG);
 
 	/* 2. Configure start address */
-	*pDMA10_START_ADDR = cPtr;	// should this match audio?
+	*pDMA10_START_ADDR = &pChunk->u16_buff[0];;	// should this match audioRx?
 
 	/* 3. set X count */
 	*pDMA10_X_COUNT = 2;
+	//*pDMA10_Y_COUNT = 2;
 
 	/* 4. set X modify */
 	*pDMA10_X_MODIFY = 1;
+	//*pDMA10_Y_MODIFY = 2;
 
 	/* 5. enable interrupt register */
 	*pUART1_IER |= ERBFI;

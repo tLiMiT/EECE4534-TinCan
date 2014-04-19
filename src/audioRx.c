@@ -98,7 +98,7 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
 
 /** start audio rx
  *    - start receiving first chunk from DMA
- *      - acqurie chunk from pool 
+ *      - acquire chunk from pool
  *      - config DMA 
  *      - start DMA + SPORT
  * Parameters:

@@ -41,7 +41,7 @@ typedef enum {
 /** Chunk Object
  */
 typedef struct {
-  /* define a union to have different acess to same data in chunk */
+  /* define a union to have different access to same data in chunk */
   union {
     unsigned char       u08_buff[SAMPLE_SIZE];  /** Unsigned Data Chunk */
     unsigned short      u16_buff[SAMPLE_SIZE/2];
@@ -67,7 +67,7 @@ int chunk_init(chunk_t *pThis);
 
 
 
-/** copy on chunk into nother 
+/** copy on chunk into another
  *@param pSrc  pointer to source object (will not be modified)
  *@param pDst  pointer to destination object (will get the data of the src object)
  *

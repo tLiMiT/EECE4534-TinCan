@@ -33,13 +33,15 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	DISABLE_DMA(*pDMA11_CONFIG);
 
 	/* 2. Configure start address */
-	*pDMA11_START_ADDR = &pChunk->u08_buff; // should this match audio?
+	*pDMA11_START_ADDR = &pChunk->u16_buff; // should this match audioTx?
 
 	/* 3. set X count */
-	*pDMA11_X_COUNT = pChunk->len;	// should this match audio?
+	*pDMA11_X_COUNT = pChunk->len;	// should this match audioTx?
+	//*pDMA11_Y_COUNT = 2;
 
 	/* 4. set X modify */
 	*pDMA11_X_MODIFY = 1;
+	//*pDMA11_Y_MODIFY = 2;
 
 	/* 5. enable interrupt register */
 	*pUART1_IER |= ETBEI;

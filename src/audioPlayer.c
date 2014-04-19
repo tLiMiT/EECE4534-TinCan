@@ -158,19 +158,6 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     
     while(1) {
 
-//    	int audioRxPlaced = 0;
-//    	/** get audio chunk */
-//    	if(!queue_is_empty(&pThis->rx.queue))
-//    	{
-//    		if(PASS == audioRx_getNbNc(&pThis->rx, &pThis->chunk))
-//    			audioRxPlaced = 1;
-//    	}
-//    	if(pThis->chunk && audioRxPlaced)
-//        {
-//          audioTx_put(&pThis->tx, pThis->chunk);
-//          audioRxPlaced = 0;
-//        }
-
     	/** get audio chunk */
     	audioRx_get(&pThis->rx, &chunk);
 

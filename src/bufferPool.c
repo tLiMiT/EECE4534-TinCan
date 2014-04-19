@@ -53,7 +53,7 @@ int bufferPool_init(bufferPool_t *pThis)
  *
  * Parameters:
  * @param pThis    pointer to queue data structure
- * @param ppChunk  pointer pointer to chunk aqcuired (null if emtpy)
+ * @param ppChunk  pointer pointer to chunk acquired (null if empty)
  *
  * @return Zero on success.
  * Negative value on failure.
@@ -107,7 +107,7 @@ int bufferPool_release(bufferPool_t *pThis, chunk_t *pChunk)
  * Parameters:
  * @param pThis  pointer to queue data structure 
  *
- * @return   true (non-zero) if emtpy, 0 if no chunks available 
+ * @return   true (non-zero) if empty, 0 if no chunks available
  */
 int bufferPool_is_empty(bufferPool_t *pThis )
 {
