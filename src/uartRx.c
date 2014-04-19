@@ -133,9 +133,35 @@ void uartRx_isr(void *pThisArg)
 
 	if ( *pDMA10_IRQ_STATUS & 0x1 ) {
 
-		// do stuff here
+		//  chunk is now filled, so update the length
+        pThis->pPending->len = pThis->pPending->size;
 
+        /* Insert the chunk previously read by the DMA RX on the
+         * RX QUEUE and a data is inserted to queue
+         */
+        if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
 
+        	// reuse the same buffer and overwrite last samples
+        	uartRx_dmaConfig(pThis->pPending);
+        	printf("[ARX INT]: RX Packet Dropped \r\n");
+        } else {
+
+        	/* Otherwise, attempt to acquire a chunk from the buffer
+			 * pool.
+			 */
+			if ( PASS == bufferPool_acquire(pThis->pBuffP, &pThis->pPending) ) {
+				/* If successful, configure the DMA to write
+				 * to this chunk.
+				 */
+				uartRx_dmaConfig(pThis->pPending);
+			} else {
+
+				/* If not successful, then we are out of
+				 * memory because the buffer pool is empty.
+				 */
+				printf("Buffer pool is empty!\n");
+			}
+        }
 		*pDMA10_IRQ_STATUS |= 0x0001;  // clear the interrupt
 	}
 }

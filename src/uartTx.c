@@ -160,14 +160,36 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 {
 	chunk_t *pchunk_temp = NULL;
 
-	if ( NULL == pThis || NULL == pChunk ) {
-		printf("[UART TX]: Failed to put \r\n");
-		return FAIL;
-	}
+	    if ( NULL == pThis || NULL == pChunk ) {
+	        printf("[Audio TX]: Failed to put \r\n");
+	        return FAIL;
+	    }
 
-	// do uart put stuff here
+	    // block if queue is full
+	    while(queue_is_full(&pThis->queue)) {
+	        printf("[Audio TX]: Queue Full \r\n");
+	        powerMode_change(PWR_ACTIVE);
+	        asm("idle;");
+	    }
+	    powerMode_change(PWR_FULL_ON);
 
-	return PASS;
+	    // get free chunk from pool
+	    if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
+	    	// copy chunk into free buffer for queue
+	    	chunk_copy(pChunk, pchunk_temp);
+
+			/* DMA already running add chunk to queue */
+			if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
+				// return chunk to pool if queue is full, effectively dropping the chunk
+				bufferPool_release(pThis->pBuffP, pchunk_temp);
+				return FAIL;
+			} else {
+				// drop if we don't get free space
+				printf("[Audio TX]: failed to get buffer \r\n");
+			}
+	    }
+
+	    return PASS;
 
 }
 
