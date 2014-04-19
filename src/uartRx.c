@@ -130,7 +130,9 @@ void uartRx_isr(void *pThisArg)
 	uartRx_t *pThis = (uartRx_t*) pThisArg;
 
 	if ( *pDMA10_IRQ_STATUS & 0x1 ) {
+
 		// do stuff here
+
 
 		*pDMA10_IRQ_STATUS |= 0x0001;  // clear the interrupt
 	}

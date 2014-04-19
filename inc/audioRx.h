@@ -63,7 +63,7 @@ typedef struct {
  * @return Zero on success.
  * Negative value on failure.
  */
-int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP, 
+int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
                  isrDisp_t *pIsrDisp);
 
 /** start audio rx

@@ -45,8 +45,7 @@ int bufferPool_init(bufferPool_t *pThis)
         queue_put(&pThis->freeList, (void **)&pThis->buffer[count] );
     }
     
-    printf("[BP]: Initialized \r\n");
-
+    printf("[BP]: Initialised\n");
     return PASS;
 }
 

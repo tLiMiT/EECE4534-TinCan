@@ -68,7 +68,7 @@ void audioRx_dmaConfig(chunk_t *pchunk)
  * @return Zero on success.
  * Negative value on failure.
  */
-int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP, 
+int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
                  isrDisp_t *pIsrDisp)
 {
     if ( NULL == pThis || NULL == pBuffP || NULL == pIsrDisp) {
@@ -192,7 +192,7 @@ void audioRx_isr(void *pThisArg)
  */
 int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
 {
-    chunk_t *chunk_rx;
+	chunk_t *chunk_rx;
 
     /* Block till a chunk arrives on the rx queue */
     while( queue_is_empty(&pThis->queue) ) {

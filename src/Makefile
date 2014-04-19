@@ -1,5 +1,5 @@
 #############################################################################
-# Makefile: TinCan: PAL XBee Phone				  					            #
+# Makefile: TinCan: PAL XBee Phone				  					        #
 #############################################################################
 #
 # Mark Hatch
@@ -29,6 +29,7 @@ OBJS =  main.o \
         audioTx.o \
         bufferPool.o \
         chunk.o 
+        
 
 # --- Libraries 	
 LIB_PATH = -L $(LIB_DIR)/lib -L $(LDSP_DIR)/lib 

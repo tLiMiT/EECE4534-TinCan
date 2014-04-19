@@ -66,7 +66,7 @@ void audioTx_dmaConfig(chunk_t *pchunk)
  * @return Zero on success.
  * Negative value on failure.
  */
-int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP, 
+int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
                  isrDisp_t *pIsrDisp)
 {
     // parameter checking

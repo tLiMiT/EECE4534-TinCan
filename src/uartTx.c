@@ -36,7 +36,7 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	*pDMA11_START_ADDR = &pChunk->u08_buff; // should this match audio?
 
 	/* 3. set X count */
-	*pDMA11_X_COUNT = pChunk->bytesUsed;	// should this match audio?
+	*pDMA11_X_COUNT = pChunk->len;	// should this match audio?
 
 	/* 4. set X modify */
 	*pDMA11_X_MODIFY = 1;
@@ -164,5 +164,8 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 	}
 
 	// do uart put stuff here
+
+	return PASS;
+
 }
 
