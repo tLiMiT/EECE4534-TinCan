@@ -43,10 +43,10 @@ void uartRx_dmaConfig(chunk_t *pChunk)
 	*pDMA10_X_MODIFY = 0;
 	*pDMA10_Y_MODIFY = 2;
 
-	/* 6. Re-enable DMA */
+	/* 5. Re-enable DMA */
 	ENABLE_DMA(*pDMA10_CONFIG);
 
-	/* 5. enable interrupt register */
+	/* 6. enable interrupt register */
 	*pUART1_IER |= ERBFI;
 }
 
@@ -78,7 +78,8 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 	if(FAIL == queue_init(&pThis->queue, UARTRX_QUEUE_DEPTH))
 		printf("[UART RX]: Queue init failed \r\n");
 
-	*pDMA10_CONFIG = WDSIZE_16 | DI_EN | WNR | DMA2D; // not sure if this should be 2D
+	/* Configure the DMA10 for RX (data receive/memory write) */
+	*pDMA10_CONFIG = SYNC | WDSIZE_16 | DI_EN | WNR | DMA2D; // not sure if this should be 2D
 
 	// register own ISR to the ISR dispatcher
 	isrDisp_registerCallback(pIsrDisp, ISR_DMA10_UART1_RX, uartRx_isr, pThis);
@@ -113,7 +114,6 @@ int uartRx_start(uartRx_t *pThis)
 	uartRx_dmaConfig(pThis->pPending);
 
 	// enable the audio transfer
-
 
 	return PASS;
 }
@@ -163,7 +163,7 @@ void uartRx_isr(void *pThisArg)
 				//printf("Buffer pool is empty!\n");
 			}
         }
-		*pDMA10_IRQ_STATUS |= 0x0001;  // clear the interrupt
+		*pDMA10_IRQ_STATUS |= DMA_DONE;		// clear the interrupt
 	}
 }
 
@@ -220,7 +220,7 @@ void uartRx_dmaStop(void)
 	DISABLE_DMA(*pDMA10_CONFIG);
 
 	// disable interrupt
-	*pUART1_IER |= ~ERBFI;
+	*pUART1_IER &= ~ERBFI;
 
 	return;
 }

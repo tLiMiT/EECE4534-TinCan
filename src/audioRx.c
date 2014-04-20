@@ -172,7 +172,7 @@ void audioRx_isr(void *pThisArg)
 				//printf("Buffer pool is empty!\n");
 			}
         }
-        *pDMA3_IRQ_STATUS |= 0x0001;   // clear the interrupt
+        *pDMA3_IRQ_STATUS |= DMA_DONE;		// clear the interrupt
     }
 }
 

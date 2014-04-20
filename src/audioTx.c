@@ -152,7 +152,7 @@ void audioTx_isr(void *pThisArg)
     		//printf("[Audio TX]: TX Queue Empty! \r\n");
     	}
 
-        *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
+        *pDMA4_IRQ_STATUS  |= DMA_DONE;     // Clear the interrupt
 
         // config DMA either with new chunk (if there was one), or with old chunk on empty Q
         audioTx_dmaConfig(pThis->pPending);
