@@ -24,6 +24,11 @@
 #include <extio.h>
 #include <tll6527_core_timer.h>
 
+//Chunk for receive path
+chunk_t receiveChunk;
+//Chunk for transmit path
+chunk_t transmitChunk;
+
 /**
  * @def I2C_CLK
  * @brief Configure I2C clock to run at 400KHz
@@ -107,13 +112,13 @@ int audioPlayer_init(audioPlayer_t *pThis)
     }   
     
     /* Initialize the UART TX module */
-    //status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
+    status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
     if ( PASS != status ) {
             return FAIL;
     }
 
     /* Initialize the UART RX module */
-	//status = uartRx_init(&pThis->uartRx, &pThis->bp, &pThis->isrDisp);
+	status = uartRx_init(&pThis->uartRx, &pThis->bp, &pThis->isrDisp);
 	if ( PASS != status ) {
 			return FAIL;
 	}
@@ -150,13 +155,13 @@ int audioPlayer_start(audioPlayer_t *pThis)
     }
 
 	/*Start the UART RX Module */
-	//status = uartRx_start(&pThis->uartRx);
+	status = uartRx_start(&pThis->uartRx);
 	if (PASS != status){
 		return FAIL;
 	}
 
 	/*Start the UART TX Module */
-	//status = uartTx_start(&pThis->uartTx);
+	status = uartTx_start(&pThis->uartTx);
 	if(PASS != status){
 		return FAIL;
 	}
@@ -175,12 +180,9 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 
 	printf("[AP]: running \r\n");
 
-	chunk_t receiveChunk;
-	//chunk_t transmitChunk;
-
 	// init local chunk
 	chunk_init(&receiveChunk);
-	//chunk_init(&transmitChunk);
+	chunk_init(&transmitChunk);
     
     while(1) {
 
@@ -191,10 +193,10 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     	uartTx_put(&pThis->uartTx, &receiveChunk);
 
     	/* Receive UART chunk */
-    	//uartRx_get(&pThis->uartRx, &receiveChunk);
+    	uartRx_get(&pThis->uartRx, &transmitChunk);
 
     	/** play audio chunk through speakers */
-    	//audioTx_put(&pThis->tx, &receiveChunk);
+    	audioTx_put(&pThis->tx, &transmitChunk);
     }
 }
 

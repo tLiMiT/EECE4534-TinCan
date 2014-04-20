@@ -135,7 +135,7 @@ void uartTx_isr(void *pThisArg)
 			pThis->pPending = pchunk;
 
 		} else {
-			printf("[UART TX]: TX Queue Empty! \r\n");
+			//printf("[UART TX]: TX Queue Empty! \r\n");
 		}
 
 		*pDMA11_IRQ_STATUS |= 0x0001; // Clear the interrupt
@@ -161,7 +161,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 	chunk_t *pchunk_temp = NULL;
 
 	    if ( NULL == pThis || NULL == pChunk ) {
-	        printf("[Audio TX]: Failed to put \r\n");
+	        printf("[UART TX]: Failed to put \r\n");
 	        return FAIL;
 	    }
 
@@ -183,8 +183,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 				/* directly put chunk to DMA transfer & enable */
 				pThis->running  = 1;
 				pThis->pPending = pchunk_temp;
-				audioTx_dmaConfig(pThis->pPending);
-				ENABLE_SPORT0_TX();
+				uartTx_dmaConfig(pThis->pPending);
 
 			} else {
 				/* DMA already running add chunk to queue */
@@ -197,7 +196,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 
 		} else {
 			// drop if we don't get free space
-			printf("[Audio TX]: failed to get buffer \r\n");
+			printf("[UART TX]: failed to get buffer \r\n");
 		}
 
 	    return PASS;

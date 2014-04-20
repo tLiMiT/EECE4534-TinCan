@@ -153,7 +153,7 @@ void audioRx_isr(void *pThisArg)
 
         	// reuse the same buffer and overwrite last samples
         	audioRx_dmaConfig(pThis->pPending);
-        	printf("[ARX INT]: RX Packet Dropped \r\n");
+        	//printf("[ARX INT]: RX Packet Dropped \r\n");
         } else {
 
         	/* Otherwise, attempt to acquire a chunk from the buffer
@@ -169,7 +169,7 @@ void audioRx_isr(void *pThisArg)
 				/* If not successful, then we are out of
 				 * memory because the buffer pool is empty.
 				 */
-				printf("Buffer pool is empty!\n");
+				//printf("Buffer pool is empty!\n");
 			}
         }
         *pDMA3_IRQ_STATUS |= 0x0001;   // clear the interrupt

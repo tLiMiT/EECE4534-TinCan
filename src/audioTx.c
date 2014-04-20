@@ -149,7 +149,7 @@ void audioTx_isr(void *pThisArg)
     		pThis->pPending = pchunk;
 
     	} else {
-    		printf("[Audio TX]: TX Queue Empty! \r\n");
+    		//printf("[Audio TX]: TX Queue Empty! \r\n");
     	}
 
         *pDMA4_IRQ_STATUS  |= 0x0001;     // Clear the interrupt
