@@ -33,7 +33,7 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	DISABLE_DMA(*pDMA11_CONFIG);
 
 	/* 2. Configure start address */
-	*pDMA11_START_ADDR = &pChunk->u16_buff; // should this match audioTx?
+	*pDMA11_START_ADDR = &pChunk->u16_buff[0]; // should this match audioTx?
 
 	/* 3. set X count */
 	*pDMA11_X_COUNT = 2; // should this match audioTx?
@@ -43,11 +43,11 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	*pDMA11_X_MODIFY = 0;
 	*pDMA11_Y_MODIFY = 2;
 
-	/* 5. enable interrupt register */
-	*pUART1_IER |= ETBEI;
-
-	/* 6. Re-enable DMA */
+	/* 5. Re-enable DMA */
 	ENABLE_DMA(*pDMA11_CONFIG);
+
+	/* 6. enable interrupt register */
+	*pUART1_IER |= ETBEI;
 }
 
 
@@ -80,7 +80,7 @@ int uartTx_init(uartTx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 	queue_init(&pThis->queue, UARTTX_QUEUE_DEPTH);
 
 	/* Configure the DMA11 for TX (data transfer/memory read) */
-	*pDMA11_CONFIG = WDSIZE_16 | DI_EN | DMA2D; // not sure if this should be 2D
+	*pDMA11_CONFIG = SYNC | WDSIZE_16 | DI_EN | DMA2D; // not sure if this should be 2D
 
 	// register own ISR to the ISR dispatcher
 	isrDisp_registerCallback(pIsrDisp, ISR_DMA11_UART1_TX, uartTx_isr, pThis);
@@ -136,17 +136,20 @@ void uartTx_isr(void *pThisArg)
 			/* 3. Register the new chunk as pending */
 			pThis->pPending = pchunk;
 
+			// config DMA either with new chunk (if there was one), or with old chunk on empty Q
+			uartTx_dmaConfig(pThis->pPending);
+
 		} else {
 			printf("[UART TX]: TX Queue Empty! \r\n");
+
+			// queue is empty, stop the DMA
 			uartTx_dmaStop();
 
+			// indicate that the DMA has stopped
 			pThis->running = 0;
 		}
 
-		*pDMA11_IRQ_STATUS |= 0x0001; // Clear the interrupt
-
-		// config DMA either with new chunk (if there was one), or with old chunk on empty Q
-		uartTx_dmaConfig(pThis->pPending);
+		*pDMA11_IRQ_STATUS |= DMA_DONE;		// Clear the interrupt
 	}
 }
 
@@ -223,7 +226,7 @@ void uartTx_dmaStop(void)
 	DISABLE_DMA(*pDMA11_CONFIG);
 
 	// disable interrupt
-	*pUART1_IER |= ~ETBEI;
+	*pUART1_IER &= ~ETBEI;
 
 	return;
 }
