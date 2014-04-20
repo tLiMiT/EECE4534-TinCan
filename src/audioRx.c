@@ -195,12 +195,12 @@ int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
 	chunk_t *chunk_rx;
 
     /* Block till a chunk arrives on the rx queue */
-    //while( queue_is_empty(&pThis->queue) ) {
+   // while( queue_is_empty(&pThis->queue) ) {
 	if( queue_is_empty(&pThis->queue) ) {
     	printf("[ARX] Queue is empty\r\n");
     	return FAIL;
         //powerMode_change(PWR_ACTIVE);
-       // asm("idle;");
+        //asm("idle;");
     }
    //powerMode_change(PWR_FULL_ON);
 

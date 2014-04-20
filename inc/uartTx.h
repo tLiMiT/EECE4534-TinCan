@@ -96,4 +96,6 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk);
  */
 void uartTx_dmaStop(void);
 
+void uartTx_dmaStart(void);
+
 #endif

@@ -33,7 +33,7 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	DISABLE_DMA(*pDMA11_CONFIG);
 
 	/* 2. Configure start address */
-	*pDMA11_START_ADDR = &pChunk->u16_buff; // should this match audioTx?
+	*pDMA11_START_ADDR = &pChunk->u16_buff[0]; // should this match audioTx?
 
 	/* 3. set X count */
 	*pDMA11_X_COUNT = 2; // should this match audioTx?
@@ -43,11 +43,12 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	*pDMA11_X_MODIFY = 0;
 	*pDMA11_Y_MODIFY = 2;
 
+	/* 6. Re-enable DMA */
+	ENABLE_DMA(*pDMA11_CONFIG);
+
 	/* 5. enable interrupt register */
 	*pUART1_IER |= ETBEI;
 
-	/* 6. Re-enable DMA */
-	ENABLE_DMA(*pDMA11_CONFIG);
 }
 
 
@@ -120,7 +121,7 @@ int uartTx_start(uartTx_t *pThis)
  */
 void uartTx_isr(void *pThisArg)
 {
-	//printf("[UART TX ISR]\r\n");
+	//printf("[UTX ISR]\r\n");
 	// create local casted pThis to avoid casting on every single access
 	uartTx_t  *pThis = (uartTx_t*) pThisArg;
 
@@ -130,23 +131,24 @@ void uartTx_isr(void *pThisArg)
 	if ( *pDMA11_IRQ_STATUS & 0x1  ) {
 		/* 1. Attempt to get the new chunk, and check if it's available: */
 		if (PASS == queue_get(&pThis->queue, (void **)&pchunk) ) {
+			//printf("[UTX ISR] AC\r\n");
 			/* 2. If so, release old chunk on success back to buffer pool */
 			bufferPool_release(pThis->pBuffP, pThis->pPending);
 
 			/* 3. Register the new chunk as pending */
 			pThis->pPending = pchunk;
 
-		} else {
-			printf("[UART TX]: TX Queue Empty! \r\n");
-			uartTx_dmaStop();
+			// config DMA either with new chunk (if there was one), or with old chunk on empty Q
+			uartTx_dmaConfig(pThis->pPending);
 
+		} else {
 			pThis->running = 0;
+			uartTx_dmaStop();
+			//printf("[UTX ISR]: TX Queue Empty! \r\n");
 		}
 
-		*pDMA11_IRQ_STATUS |= 0x0001; // Clear the interrupt
 
-		// config DMA either with new chunk (if there was one), or with old chunk on empty Q
-		uartTx_dmaConfig(pThis->pPending);
+		*pDMA11_IRQ_STATUS |= 0x0001; // Clear the interrupt
 	}
 }
 
@@ -171,12 +173,14 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 	    }
 
 	    // block if queue is full
-	    while(queue_is_full(&pThis->queue)) {
+	    //while(queue_is_full(&pThis->queue)) {
+	    if(queue_is_full(&pThis->queue)) {
 	        printf("[UART TX]: Queue Full \r\n");
-	        powerMode_change(PWR_ACTIVE);
-	        asm("idle;");
+	        return FAIL;
+	        //powerMode_change(PWR_ACTIVE);
+	        //asm("idle;");
 	    }
-	    powerMode_change(PWR_FULL_ON);
+	    //powerMode_change(PWR_FULL_ON);
 
 	    // get free chunk from pool
 		if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
@@ -192,14 +196,14 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 				uartTx_dmaConfig(pThis->pPending);
 
 			} else {
+				printf("[UART TX] Chunk added to queue\r\n");
 				/* DMA already running add chunk to queue */
 				if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
-					// return chunk to pool if queue is full, effectively dropping the chunk
 					printf("[UART TX] Failed to add to queue\r\n");
+					// return chunk to pool if queue is full, effectively dropping the chunk
 					bufferPool_release(pThis->pBuffP, pchunk_temp);
 					return FAIL;
 				}
-				printf("[UART TX] Chunk added to queue\r\n");
 			}
 
 		} else {
@@ -219,11 +223,24 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
  */
 void uartTx_dmaStop(void)
 {
+
+	// disable interrupt
+	*pUART1_IER &= ~ETBEI;
+
 	// disable the DMA
 	DISABLE_DMA(*pDMA11_CONFIG);
 
-	// disable interrupt
-	*pUART1_IER |= ~ETBEI;
+	return;
+}
+
+void uartTx_dmaStart(void)
+{
+
+	/* 6. Re-enable DMA */
+	ENABLE_DMA(*pDMA11_CONFIG);
+
+	/* 5. enable interrupt register */
+	*pUART1_IER |= ETBEI;
 
 	return;
 }

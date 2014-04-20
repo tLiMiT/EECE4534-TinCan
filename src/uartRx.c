@@ -43,11 +43,11 @@ void uartRx_dmaConfig(chunk_t *pChunk)
 	*pDMA10_X_MODIFY = 0;
 	*pDMA10_Y_MODIFY = 2;
 
-	/* 5. enable interrupt register */
-	*pUART1_IER |= ERBFI;
-
 	/* 6. Re-enable DMA */
 	ENABLE_DMA(*pDMA10_CONFIG);
+
+	/* 5. enable interrupt register */
+	*pUART1_IER |= ERBFI;
 }
 
 
@@ -128,7 +128,7 @@ int uartRx_start(uartRx_t *pThis)
  */
 void uartRx_isr(void *pThisArg)
 {
-	printf("[UART RX ISR]\r\n");
+	//printf("[UART RX ISR]\r\n");
 	// local pThis to avoid constant casting
 	uartRx_t *pThis = (uartRx_t*) pThisArg;
 
@@ -144,7 +144,7 @@ void uartRx_isr(void *pThisArg)
 
         	// reuse the same buffer and overwrite last samples
         	uartRx_dmaConfig(pThis->pPending);
-        	printf("[UART RX INT]: RX Packet Dropped \r\n");
+        	//printf("[UART RX INT]: RX Packet Dropped \r\n");
         } else {
 
         	/* Otherwise, attempt to acquire a chunk from the buffer
@@ -160,7 +160,7 @@ void uartRx_isr(void *pThisArg)
 				/* If not successful, then we are out of
 				 * memory because the buffer pool is empty.
 				 */
-				printf("Buffer pool is empty!\n");
+				//printf("Buffer pool is empty!\n");
 			}
         }
 		*pDMA10_IRQ_STATUS |= 0x0001;  // clear the interrupt

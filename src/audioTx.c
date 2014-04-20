@@ -181,12 +181,14 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
     }
     
     // block if queue is full
-    while(queue_is_full(&pThis->queue)) {
+    //while(queue_is_full(&pThis->queue)) {
+    if(queue_is_full(&pThis->queue)) {
         printf("[Audio TX]: Queue Full \r\n");
-        powerMode_change(PWR_ACTIVE);
-        asm("idle;");
+        return FAIL;
+        //powerMode_change(PWR_ACTIVE);
+        //asm("idle;");
     }
-    powerMode_change(PWR_FULL_ON);
+   // powerMode_change(PWR_FULL_ON);
 
     // get free chunk from pool
     if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
