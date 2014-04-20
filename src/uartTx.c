@@ -74,6 +74,7 @@ int uartTx_init(uartTx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 
 	pThis->pPending     = NULL;
 	pThis->pBuffP       = pBuffP;
+	pThis->running      = 0;
 
 	// init queue
 	queue_init(&pThis->queue, UARTTX_QUEUE_DEPTH);
@@ -119,6 +120,7 @@ int uartTx_start(uartTx_t *pThis)
  */
 void uartTx_isr(void *pThisArg)
 {
+	//printf("[UART TX ISR]\r\n");
 	// create local casted pThis to avoid casting on every single access
 	uartTx_t  *pThis = (uartTx_t*) pThisArg;
 
@@ -135,7 +137,7 @@ void uartTx_isr(void *pThisArg)
 			pThis->pPending = pchunk;
 
 		} else {
-			//printf("[UART TX]: TX Queue Empty! \r\n");
+			printf("[UART TX]: TX Queue Empty! \r\n");
 		}
 
 		*pDMA11_IRQ_STATUS |= 0x0001; // Clear the interrupt
@@ -181,6 +183,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 			/* If DMA not running ? */
 			if ( 0 == pThis->running ) {
 				/* directly put chunk to DMA transfer & enable */
+				printf("[UART TX] put chunk directly onto DMA transfer\r\n");
 				pThis->running  = 1;
 				pThis->pPending = pchunk_temp;
 				uartTx_dmaConfig(pThis->pPending);
@@ -189,9 +192,11 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 				/* DMA already running add chunk to queue */
 				if ( PASS != queue_put(&pThis->queue, pchunk_temp) ) {
 					// return chunk to pool if queue is full, effectively dropping the chunk
+					printf("[UART TX] Failed to add to queue\r\n");
 					bufferPool_release(pThis->pBuffP, pchunk_temp);
 					return FAIL;
 				}
+				printf("[UART TX] Chunk added to queue\r\n");
 			}
 
 		} else {

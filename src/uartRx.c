@@ -128,6 +128,7 @@ int uartRx_start(uartRx_t *pThis)
  */
 void uartRx_isr(void *pThisArg)
 {
+	printf("[UART RX ISR]\r\n");
 	// local pThis to avoid constant casting
 	uartRx_t *pThis = (uartRx_t*) pThisArg;
 
@@ -143,7 +144,7 @@ void uartRx_isr(void *pThisArg)
 
         	// reuse the same buffer and overwrite last samples
         	uartRx_dmaConfig(pThis->pPending);
-        	//printf("[UART RX INT]: RX Packet Dropped \r\n");
+        	printf("[UART RX INT]: RX Packet Dropped \r\n");
         } else {
 
         	/* Otherwise, attempt to acquire a chunk from the buffer
@@ -159,7 +160,7 @@ void uartRx_isr(void *pThisArg)
 				/* If not successful, then we are out of
 				 * memory because the buffer pool is empty.
 				 */
-				//printf("Buffer pool is empty!\n");
+				printf("Buffer pool is empty!\n");
 			}
         }
 		*pDMA10_IRQ_STATUS |= 0x0001;  // clear the interrupt
@@ -185,18 +186,22 @@ int uartRx_get(uartRx_t *pThis, chunk_t *pChunk)
 	chunk_t *chunk_rx;
 
 	/* Block till a chunk arrives on the rx queue */
-	while( queue_is_empty(&pThis->queue) )
+	//while( queue_is_empty(&pThis->queue) )
+	if( queue_is_empty(&pThis->queue) )
 	{
-		powerMode_change(PWR_ACTIVE);
-		asm("idle;");
+		printf("[UART RX] Queue is empty\r\n");
+		return FAIL;
+		//powerMode_change(PWR_ACTIVE);
+		//asm("idle;");
 	}
-	powerMode_change(PWR_FULL_ON);
+	//powerMode_change(PWR_FULL_ON);
 
 	queue_get(&pThis->queue, (void**)&chunk_rx);
 
 	chunk_copy(chunk_rx, pChunk);
 
 	if ( FAIL == bufferPool_release(pThis->pBuffP, chunk_rx) ) {
+		printf("[UART RX] Failed to release\r\n");
 		return FAIL;
 	}
 
