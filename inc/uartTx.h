@@ -21,9 +21,9 @@
 /** uart TX object
  */
 typedef struct {
-  queue_t        queue;  	/* queue for received buffers */
-  chunk_t        *pPending; /* pointer to pending chunk just in receiving */
-  bufferPool_t   *pBuffP; 	/* pointer to buffer pool */
+  queue_t		queue;		/* queue for received buffers */
+  chunk_t		*pPending; 	/* pointer to pending chunk just in receiving */
+  bufferPool_t	*pBuffP; 	/* pointer to buffer pool */
   int 			running;
 } uartTx_t;
 
@@ -88,5 +88,12 @@ void uartTx_isr(void *pThisArg);
  * Negative value on failure.
  */
 int uartTx_put(uartTx_t *pThis, chunk_t *pChunk);
+
+/* uart tx dma stop
+ * - empty for now
+ *
+ * @return
+ */
+void uartTx_dmaStop(void);
 
 #endif
