@@ -92,4 +92,11 @@ void uartRx_isr(void *pThisArg);
  */
 int uartRx_get(uartRx_t *pThis, chunk_t *pChunk);
 
+/* uart rx dma stop
+ * - empty for now
+ *
+ * @return
+ */
+void uartRx_dmaStop(void);
+
 #endif

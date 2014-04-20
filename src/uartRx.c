@@ -203,3 +203,19 @@ int uartRx_get(uartRx_t *pThis, chunk_t *pChunk)
 	return PASS;
 }
 
+
+/* uart rx dma stop
+ * - empty for now
+ *
+ * @return
+ */
+void uartRx_dmaStop(void)
+{
+	// disable the DMA
+	DISABLE_DMA(*pDMA10_CONFIG);
+
+	// disable interrupt
+	*pUART1_IER |= ~ERBFI;
+
+	return;
+}

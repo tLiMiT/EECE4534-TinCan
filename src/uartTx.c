@@ -136,6 +136,9 @@ void uartTx_isr(void *pThisArg)
 
 		} else {
 			//printf("[UART TX]: TX Queue Empty! \r\n");
+			uartTx_dmaStop();
+
+			pThis->running = 0;
 		}
 
 		*pDMA11_IRQ_STATUS |= 0x0001; // Clear the interrupt
@@ -201,5 +204,22 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 
 	    return PASS;
 
+}
+
+
+/* uart tx dma stop
+ * - empty for now
+ *
+ * @return
+ */
+void uartTx_dmaStop(void)
+{
+	// disable the DMA
+	DISABLE_DMA(*pDMA11_CONFIG);
+
+	// disable interrupt
+	*pUART1_IER |= ~ETBEI;
+
+	return;
 }
 
