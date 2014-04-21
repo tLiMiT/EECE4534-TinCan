@@ -186,14 +186,7 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 	printf("[AP]: running \r\n");
     
     while(1) {
-		/*audioRx_get(&pThis->rx, &receiveChunk);
-		UARTStart();
-		uartTx_put(&pThis->uartTx, &receiveChunk);
-		uartRx_get(&pThis->uartRx, &transmitChunk);
-		UARTStop();
-		audioTx_put(&pThis->tx, &transmitChunk);
-		*/
-    	//////////////////////////////
+    	//testAudioLoopback(pThis);
 		UARTStart();
     	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
     	{
@@ -205,9 +198,6 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     			}
     		}
     	}
-    	//////////////////////////
-		//if(PASS == audioRx_get(&pThis->rx, &receiveChunk))
-			//audioTx_put(&pThis->tx, &receiveChunk);
 
     }
     UARTStop();
@@ -247,5 +237,20 @@ int UARTStop( void )
     return PASS;
 }
 
+void testNBAudioPath(audioPlayer_t *pThis)
+{
+	audioRx_get(&pThis->rx, &receiveChunk);
+	UARTStart();
+	uartTx_put(&pThis->uartTx, &receiveChunk);
+	uartRx_get(&pThis->uartRx, &transmitChunk);
+	UARTStop();
+	audioTx_put(&pThis->tx, &transmitChunk);
+}
+
+void testAudioLoopBack(audioPlayer_t *pThis)
+{
+	if(PASS == audioRx_get(&pThis->rx, &receiveChunk))
+	audioTx_put(&pThis->tx, &receiveChunk);
+}
 
 

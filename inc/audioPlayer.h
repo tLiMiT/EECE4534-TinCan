@@ -67,6 +67,17 @@ int UARTStart(void);
 
 int UARTStop(void);
 
+/****
+ *
+ * Test functions for audioplayer
+ */
+
+//Test all non-blocking versions of functions
+void testNBAudioPath(audioPlayer_t *pThis);
+
+//Test simple audioTx/audioRx loopback
+void testAudioLoopBack(audioPlayer_t *pThis);
+
 #endif
 
 
