@@ -80,6 +80,10 @@ void testAudioLoopBack(audioPlayer_t *pThis);
 
 void testUART(audioPlayer_t *pThis);
 
+int UARTTransmit(char* data, unsigned char datalen);
+
+int UARTReceive(char* data, unsigned char datalen);
+
 #endif
 
 
