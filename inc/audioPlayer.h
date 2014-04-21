@@ -78,6 +78,8 @@ void testNBAudioPath(audioPlayer_t *pThis);
 //Test simple audioTx/audioRx loopback
 void testAudioLoopBack(audioPlayer_t *pThis);
 
+void testUART(audioPlayer_t *pThis);
+
 #endif
 
 

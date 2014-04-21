@@ -80,7 +80,7 @@ int uartTx_init(uartTx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 	queue_init(&pThis->queue, UARTTX_QUEUE_DEPTH);
 
 	/* Configure the DMA11 for TX (data transfer/memory read) */
-	*pDMA11_CONFIG = WDSIZE_16 | DI_EN; // not sure if this should be 2D
+	*pDMA11_CONFIG = SYNC | WDSIZE_16 | DI_EN; // not sure if this should be 2D
 
 	// register own ISR to the ISR dispatcher
 	isrDisp_registerCallback(pIsrDisp, ISR_DMA11_UART1_TX, uartTx_isr, pThis);

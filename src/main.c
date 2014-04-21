@@ -74,8 +74,6 @@ int main(void)
     
     audioPlayer_init(&audioPlayer);
     audioPlayer_start(&audioPlayer);
-
-
     audioPlayer_run(&audioPlayer);
 
 }
