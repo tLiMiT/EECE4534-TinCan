@@ -218,7 +218,7 @@ int UARTStart( void )
 {
     *pPORTF_FER 	|= 0xc000;		/* set function enable register for 14 and 15 */
     *pPORTF_MUX 	|= 0x0c00;		/* set PF15to14_MUX to 2nd alt peripheral */
-    *pPORTFIO_DIR 	|= 0x4000;		/* set PF14 to output */
+    *pPORTFIO_DIR 	|= 0x4000;		/* set PF14 to output ( 0xc000 ) */
 
     asm("ssync;");
 
