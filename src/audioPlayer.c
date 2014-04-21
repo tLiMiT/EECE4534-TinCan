@@ -19,6 +19,7 @@
 #include <tll_common.h>
 #include "audioPlayer.h"
 #include <bf52xI2cMaster.h>
+#include <bf52x_uart.h>
 #include "ssm2602.h"
 #include <isrDisp.h>
 #include <extio.h>
@@ -191,8 +192,9 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     while(1) {
 
     	//testAudioLoopback(pThis);
-    	testNBAudioPath(pThis);
-		//UARTStart();
+    	//testNBAudioPath(pThis);
+    	testUART(pThis);
+    	//UARTStart();
     	/*
     	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
     	{
@@ -216,11 +218,37 @@ void audioPlayer_run (audioPlayer_t *pThis) {
  */
 int UARTStart( void )
 {
-    *pPORTF_FER 	|= 0xc000;		/* set function enable register for 14 and 15 */
-    *pPORTF_MUX 	|= 0x800;		/* set PF15to14_MUX to 2nd alt peripheral */
-    *pPORTFIO_DIR 	|= 0x4000;		/* set PF14 to output ( 0xc000 ) */
+	unsigned short divisor;
 
-    asm("ssync;");
+	*pPORTF_FER |= PF14 | PF15;		/* set function enable register for 14 and 15 */
+	*pPORTF_MUX &= ~0x0c00;
+	*pPORTF_MUX |= 0x0800;		/* set PF15to14_MUX to 2nd alt peripheral */
+
+	bf52x_uart_settings sett = {
+		.parenable = 0,
+		.parity = 0,
+		.rxtx_baud = BF52X_BAUD_RATE_115200
+	};
+
+	*pUART1_LCR = WLS(8);
+	if (sett.parenable && sett.parity) {
+		/* Enable parity check and on even parity */
+		*pUART1_LCR |= PEN | EPS;
+	}
+
+	if ((sett.rxtx_baud >= BF52X_BAUD_RATE_2400) &&
+			(sett.rxtx_baud <= BF52X_BAUD_RATE_6250000)) {
+				/* Enable Divisor Latch Access - DLAB bit to access DLL andl DLH registers */
+				*pUART1_LCR |= DLAB;
+				divisor = BF52X_SCLK/(16 * sett.rxtx_baud);
+				*pUART1_DLL = (0x00ff & divisor);
+				*pUART1_DLH = (0xff00 & divisor) >> 8;
+	}
+	/* Now disable the DLAB inorder to access UARTX_THR, UARTX_RBR and UARTX_IER registers */
+	*pUART1_LCR &= ~DLAB;
+
+	/* Enable the uart clock here */
+	*pUART1_GCTL |= UCEN;
 
     return PASS;
 }
@@ -261,6 +289,25 @@ void testAudioLoopBack(audioPlayer_t *pThis)
 {
 	if(PASS == audioRx_get(&pThis->rx, &receiveChunk))
 	audioTx_put(&pThis->tx, &receiveChunk);
+}
+
+void testUART(audioPlayer_t *pThis)
+{
+	int i = 0;
+	UARTStart();
+	char testdataout[50];
+	char testdatain[50];
+	for(i = 0; i < 50; i++)
+	{
+		testdataout[i] = i;
+		bf52x_uart_transmit(&testdataout[i], 1);
+		bf52x_uart_receive(&testdatain[i], 1);
+	}
+	UARTStop();
+	for(i = 0; i < 50; i++)
+	{
+		printf("%d\r\n", i);
+	}
 }
 
 
