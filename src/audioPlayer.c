@@ -112,13 +112,13 @@ int audioPlayer_init(audioPlayer_t *pThis)
     }
 
     /* Initialize the UART TX module */
-    status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
+    //status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
     if ( PASS != status ) {
             return FAIL;
     }
 
     /* Initialize the UART RX module */
-	status = uartRx_init(&pThis->uartRx, &pThis->bp, &pThis->isrDisp);
+	//status = uartRx_init(&pThis->uartRx, &pThis->bp, &pThis->isrDisp);
 	if ( PASS != status ) {
 			return FAIL;
 	}
@@ -155,13 +155,13 @@ int audioPlayer_start(audioPlayer_t *pThis)
     }
 
 	/*Start the UART TX Module */
-	status = uartTx_start(&pThis->uartTx);
+	//status = uartTx_start(&pThis->uartTx);
 	if(PASS != status){
 		return FAIL;
 	}
 
 	/*Start the UART RX Module */
-	status = uartRx_start(&pThis->uartRx);
+	//status = uartRx_start(&pThis->uartRx);
 	if (PASS != status){
 		return FAIL;
 	}
@@ -260,13 +260,7 @@ int UARTStart( void )
  */
 int UARTStop( void )
 {
-	/*
-    bf52x_uart_settings settings = {
-        .parenable = 0,
-        .parity = 0,
-        .rxtx_baud = BF52X_BAUD_RATE_115200
-    };
-	*/
+	bf52x_uart_deinit();
 
     *pPORTF_FER 	&= 0x0000;		/* clear function enable register */
 
@@ -297,6 +291,7 @@ void testUART(audioPlayer_t *pThis)
 	UARTStart();
 	char testdataout[50];
 	char testdatain[50];
+	for (i=0; i < 50; i++) { testdataout[i] = 0; testdatain[i] = 0; }
 	for(i = 0; i < 50; i++)
 	{
 		testdataout[i] = i;
