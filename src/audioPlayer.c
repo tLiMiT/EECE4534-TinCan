@@ -191,8 +191,9 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     while(1) {
 
     	//testAudioLoopback(pThis);
-		UARTStart();
-
+    	testNBAudioPath(pThis);
+		//UARTStart();
+    	/*
     	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
     	{
     		if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
@@ -203,7 +204,7 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     			}
     		}
     	}
-
+		*/
     }
     UARTStop();
 }
@@ -217,7 +218,7 @@ int UARTStart( void )
 {
     *pPORTF_FER 	|= 0xc000;		/* set function enable register for 14 and 15 */
     *pPORTF_MUX 	|= 0x0c00;		/* set PF15to14_MUX to 2nd alt peripheral */
-    *pPORTFIO_DIR 	|= 0xc000;		/* set PF15 and PF14 to outputs */
+    *pPORTFIO_DIR 	|= 0x4000;		/* set PF14 to output */
 
     asm("ssync;");
 
@@ -249,10 +250,10 @@ int UARTStop( void )
 void testNBAudioPath(audioPlayer_t *pThis)
 {
 	audioRx_get(&pThis->rx, &receiveChunk);
-	UARTStart();
+	//UARTStart();
 	uartTx_put(&pThis->uartTx, &receiveChunk);
 	uartRx_get(&pThis->uartRx, &transmitChunk);
-	UARTStop();
+	//UARTStop();
 	audioTx_put(&pThis->tx, &transmitChunk);
 }
 
