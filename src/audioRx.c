@@ -41,12 +41,12 @@ void audioRx_dmaConfig(chunk_t *pchunk)
 	*pDMA3_START_ADDR = &pchunk->u16_buff[0];
 
 	/* 3. set X count */
-	*pDMA3_X_COUNT = 2;
-	*pDMA3_Y_COUNT = pchunk->size/2; // 16 bit data so we change the stride and count
+	*pDMA3_X_COUNT = pchunk->size/2; //*pDMA3_X_COUNT = 2;
+	//*pDMA3_Y_COUNT = pchunk->size/2; // 16 bit data so we change the stride and count
 
 	/* 4. set X modify */
-	*pDMA3_X_MODIFY = 0;
-	*pDMA3_Y_MODIFY = 2;
+	*pDMA3_X_MODIFY = 2; //*pDMA3_X_MODIFY = 0;
+	//*pDMA3_Y_MODIFY = 2;
 
 	/* 5 Re-enable DMA */
 	ENABLE_DMA(*pDMA3_CONFIG);
@@ -83,7 +83,7 @@ int audioRx_init(audioRx_t *pThis, bufferPool_t *pBuffP,
     if(FAIL == queue_init(&pThis->queue, AUDIORX_QUEUE_DEPTH))
     	printf("[Audio RX]: Queue init failed\n");
 
-    *pDMA3_CONFIG = WDSIZE_16 | DI_EN | WNR | DMA2D; /* 16 bit and DMA enable */
+    *pDMA3_CONFIG = WDSIZE_16 | DI_EN | WNR; //| DMA2D; /* 16 bit and DMA enable */
 
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA3_SPORT0_RX, audioRx_isr, pThis);
@@ -195,22 +195,22 @@ int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
 	chunk_t *chunk_rx;
 
     /* Block till a chunk arrives on the rx queue */
-   // while( queue_is_empty(&pThis->queue) ) {
+    //while( queue_is_empty(&pThis->queue) ) {
 	if( queue_is_empty(&pThis->queue) ) {
-    	printf("[ARX] Queue is empty\r\n");
+    	//printf("[ARX] Queue is empty\r\n");
     	return FAIL;
         //powerMode_change(PWR_ACTIVE);
         //asm("idle;");
     }
    //powerMode_change(PWR_FULL_ON);
 
-    queue_get(&pThis->queue, (void**)&chunk_rx);
-
-    chunk_copy(chunk_rx, pChunk);
-
-    if ( FAIL == bufferPool_release(pThis->pBuffP, chunk_rx) ) {
-        return FAIL;
+    if(FAIL == queue_get(&pThis->queue, (void**)&chunk_rx))
+    	return FAIL;
+    else {
+    	 chunk_copy(chunk_rx, pChunk);
+    	 bufferPool_release(pThis->pBuffP, chunk_rx);
     }
+
     return PASS;
 }
 

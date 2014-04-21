@@ -109,7 +109,7 @@ int audioPlayer_init(audioPlayer_t *pThis)
     if ( PASS != status) {
         return FAIL;
     }
-    
+
     /* Initialize the UART TX module */
     status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
     if ( PASS != status ) {
@@ -170,7 +170,7 @@ int audioPlayer_start(audioPlayer_t *pThis)
 	if ( PASS != status) {
         return FAIL;
     }
-    
+
     return PASS;
 }
 
@@ -186,23 +186,66 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 	printf("[AP]: running \r\n");
     
     while(1) {
-
-    	/** get audio chunk */
-    	//printf("[AP] AudioRX_get\r\n");
-    	if(PASS == audioRx_get(&pThis->rx, &receiveChunk)){
-
-			//printf("[AP] UARTTX_put\r\n");
-			uartTx_put(&pThis->uartTx, &receiveChunk);
+		/*audioRx_get(&pThis->rx, &receiveChunk);
+		UARTStart();
+		uartTx_put(&pThis->uartTx, &receiveChunk);
+		uartRx_get(&pThis->uartRx, &transmitChunk);
+		UARTStop();
+		audioTx_put(&pThis->tx, &transmitChunk);
+		*/
+    	//////////////////////////////
+		UARTStart();
+    	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
+    	{
+    		if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
+    		{
+    			if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
+    			{
+    				audioTx_put(&pThis->tx, &receiveChunk);
+    			}
+    		}
     	}
-    	/* Receive UART chunk */
-    	//printf("[AP] UARTRX_get\r\n");
-    	if(PASS == uartRx_get(&pThis->uartRx, &transmitChunk)) {
+    	//////////////////////////
+		//if(PASS == audioRx_get(&pThis->rx, &receiveChunk))
+			//audioTx_put(&pThis->tx, &receiveChunk);
 
-			/** play audio chunk through speakers */
-			//printf("[AP] AudioRX_put\r\n");
-			audioTx_put(&pThis->tx, &receiveChunk);
-    	}
     }
+    UARTStop();
 }
+
+
+int UARTStart( void )
+{
+
+    *pPORTF_FER |= 0xc000;
+    *pPORTF_MUX &= ~0x0400;
+    *pPORTF_MUX |= 0x0800;
+    *pPORTFIO_DIR |= 0x4000;
+    *pPORTFIO_DIR &= ~(0x8000);
+    asm("ssync;");
+
+    return PASS;
+}
+
+/** Stops the wireless communicator
+ *
+ * @return PASS on success, FAIL otherwise
+ */
+int UARTStop( void )
+{
+
+    bf52x_uart_settings settings = {
+        .parenable = 0,
+        .parity = 0,
+        .rxtx_baud = BF52X_BAUD_RATE_115200
+    };
+
+    *pPORTF_FER &= ~0xc000;
+
+    asm("ssync;");
+
+    return PASS;
+}
+
 
 

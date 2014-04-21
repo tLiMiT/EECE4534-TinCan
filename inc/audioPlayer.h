@@ -63,6 +63,10 @@ int audioPlayer_start(audioPlayer_t *pThis);
  **/
 void audioPlayer_run(audioPlayer_t *pThis);
 
+int UARTStart(void);
+
+int UARTStop(void);
+
 #endif
 
 

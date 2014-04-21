@@ -36,12 +36,12 @@ void uartRx_dmaConfig(chunk_t *pChunk)
 	*pDMA10_START_ADDR = &pChunk->u16_buff[0];	// should this match audioRx?
 
 	/* 3. set X count */
-	*pDMA10_X_COUNT = 2;
-	*pDMA10_Y_COUNT = pChunk->size/2; // 16 bit data so we change the stride and count
+	*pDMA10_X_COUNT = pChunk->size/2;//*pDMA10_X_COUNT = 2;
+	//*pDMA10_Y_COUNT = pChunk->size/2; // 16 bit data so we change the stride and count
 
 	/* 4. set X modify */
-	*pDMA10_X_MODIFY = 0;
-	*pDMA10_Y_MODIFY = 2;
+	*pDMA10_X_MODIFY = 2; //*pDMA10_X_MODIFY = 0;
+	//*pDMA10_Y_MODIFY = 2;
 
 	/* 5. Re-enable DMA */
 	ENABLE_DMA(*pDMA10_CONFIG);
@@ -79,7 +79,7 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 		printf("[UART RX]: Queue init failed \r\n");
 
 	/* Configure the DMA10 for RX (data receive/memory write) */
-	*pDMA10_CONFIG = SYNC | WDSIZE_16 | DI_EN | WNR | DMA2D; // not sure if this should be 2D
+	*pDMA10_CONFIG = WDSIZE_16 | DI_EN | WNR; //| DMA2D; // not sure if this should be 2D
 
 	// register own ISR to the ISR dispatcher
 	isrDisp_registerCallback(pIsrDisp, ISR_DMA10_UART1_RX, uartRx_isr, pThis);
@@ -189,20 +189,18 @@ int uartRx_get(uartRx_t *pThis, chunk_t *pChunk)
 	//while( queue_is_empty(&pThis->queue) )
 	if( queue_is_empty(&pThis->queue) )
 	{
-		printf("[UART RX] Queue is empty\r\n");
+		//printf("[UART RX] Queue is empty\r\n");
 		return FAIL;
 		//powerMode_change(PWR_ACTIVE);
 		//asm("idle;");
 	}
 	//powerMode_change(PWR_FULL_ON);
 
-	queue_get(&pThis->queue, (void**)&chunk_rx);
-
-	chunk_copy(chunk_rx, pChunk);
-
-	if ( FAIL == bufferPool_release(pThis->pBuffP, chunk_rx) ) {
-		printf("[UART RX] Failed to release\r\n");
+	 if(FAIL == queue_get(&pThis->queue, (void**)&chunk_rx))
 		return FAIL;
+	else {
+		 chunk_copy(chunk_rx, pChunk);
+		 bufferPool_release(pThis->pBuffP, chunk_rx);
 	}
 
 	return PASS;
@@ -216,11 +214,11 @@ int uartRx_get(uartRx_t *pThis, chunk_t *pChunk)
  */
 void uartRx_dmaStop(void)
 {
-	// disable the DMA
-	DISABLE_DMA(*pDMA10_CONFIG);
-
 	// disable interrupt
 	*pUART1_IER &= ~ERBFI;
+
+	// disable the DMA
+	DISABLE_DMA(*pDMA10_CONFIG);
 
 	return;
 }

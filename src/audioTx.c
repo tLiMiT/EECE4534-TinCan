@@ -40,12 +40,12 @@ void audioTx_dmaConfig(chunk_t *pchunk)
 	*pDMA4_START_ADDR = &pchunk->u16_buff[0];
 
 	/* 3. set X count */
-	*pDMA4_X_COUNT = 2;//pchunk->bytesUsed/2;
-	*pDMA4_Y_COUNT = pchunk->len/2; // 16 bit data so we change the stride and count
+	*pDMA4_X_COUNT = pchunk->len/2;//*pDMA4_X_COUNT = 2;//pchunk->bytesUsed/2;
+	//*pDMA4_Y_COUNT = pchunk->len/2; // 16 bit data so we change the stride and count
    
 	/* 4. set X modify */
-	*pDMA4_X_MODIFY = 0;
-	*pDMA4_Y_MODIFY = 2;
+	*pDMA4_X_MODIFY = 2; //*pDMA4_X_MODIFY = 0;
+	//*pDMA4_Y_MODIFY = 2;
    
 	/* 5. Re-enable DMA */
 	ENABLE_DMA(*pDMA4_CONFIG);
@@ -86,7 +86,7 @@ int audioTx_init(audioTx_t *pThis, bufferPool_t *pBuffP,
  
     /* Configure the DMA4 for TX (data transfer/memory read) */
     /* Read, 2-D, interrupt enabled, 16 bit transfer, Auto buffer */
-    *pDMA4_CONFIG = WDSIZE_16 | DI_EN | DMA2D; /* 16 bit and DMA enable */
+    *pDMA4_CONFIG = WDSIZE_16 | DI_EN; //| DMA2D; /* 16 bit and DMA enable */
     
     // register own ISR to the ISR dispatcher
     isrDisp_registerCallback(pIsrDisp, ISR_DMA4_SPORT0_TX, audioTx_isr, pThis);
@@ -176,19 +176,19 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 	chunk_t *pchunk_temp = NULL;
 
     if ( NULL == pThis || NULL == pChunk ) {
-        printf("[Audio TX]: Failed to put \r\n");
+        //printf("[Audio TX]: Failed to put \r\n");
         return FAIL;
     }
     
     // block if queue is full
     //while(queue_is_full(&pThis->queue)) {
     if(queue_is_full(&pThis->queue)) {
-        printf("[Audio TX]: Queue Full \r\n");
+        //printf("[Audio TX]: Queue Full \r\n");
         return FAIL;
         //powerMode_change(PWR_ACTIVE);
         //asm("idle;");
     }
-   // powerMode_change(PWR_FULL_ON);
+    //powerMode_change(PWR_FULL_ON);
 
     // get free chunk from pool
     if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
@@ -214,7 +214,8 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
 
     } else {
     	// drop if we don't get free space
-    	printf("[Audio TX]: failed to get buffer \r\n");
+    	//printf("[Audio TX]: failed to get buffer \r\n");
+    	return FAIL;
     }
     
     return PASS;
