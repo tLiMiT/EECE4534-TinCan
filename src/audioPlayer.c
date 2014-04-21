@@ -184,6 +184,9 @@ int audioPlayer_start(audioPlayer_t *pThis)
 void audioPlayer_run (audioPlayer_t *pThis) {
 
 	printf("[AP]: running \r\n");
+
+	// setup UART
+	UARTStart();
     
     while(1) {
 		/*audioRx_get(&pThis->rx, &receiveChunk);
@@ -194,7 +197,7 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 		audioTx_put(&pThis->tx, &transmitChunk);
 		*/
     	//////////////////////////////
-		UARTStart();
+
     	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
     	{
     		if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
@@ -214,18 +217,21 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 }
 
 
+/** Starts the wireless communicator
+ *
+ * @return PASS on success, FAIL otherwise
+ */
 int UARTStart( void )
 {
+    *pPORTF_FER 	|= 0xc000;		/* set function enable register for 14 and 15 */
+    *pPORTF_MUX 	|= 0x0c00;		/* set PF15to14_MUX to 2nd alt peripheral */
+    *pPORTFIO_DIR 	|= 0xc000;		/* set PF15 and PF14 to outputs */
 
-    *pPORTF_FER |= 0xc000;
-    *pPORTF_MUX &= ~0x0400;
-    *pPORTF_MUX |= 0x0800;
-    *pPORTFIO_DIR |= 0x4000;
-    *pPORTFIO_DIR &= ~(0x8000);
     asm("ssync;");
 
     return PASS;
 }
+
 
 /** Stops the wireless communicator
  *
@@ -233,14 +239,15 @@ int UARTStart( void )
  */
 int UARTStop( void )
 {
-
+	/*
     bf52x_uart_settings settings = {
         .parenable = 0,
         .parity = 0,
         .rxtx_baud = BF52X_BAUD_RATE_115200
     };
+	*/
 
-    *pPORTF_FER &= ~0xc000;
+    *pPORTF_FER 	&= 0x0000;		/* clear function enable register */
 
     asm("ssync;");
 

@@ -36,7 +36,7 @@
  * @var audioPlayer
  * @brief  global audio player object
  */
-audioPlayer_t            audioPlayer;
+audioPlayer_t	audioPlayer;
 
 
 /** 
@@ -51,7 +51,7 @@ audioPlayer_t            audioPlayer;
  */
 int main(void)
 {
-    int                         status                  = -1;
+    int status = -1;
     
     /* Blackfin setup function to configure processor */	
     status = blackfin_setup(); //returns 0 if successful and -1 if failed
@@ -74,6 +74,8 @@ int main(void)
     
     audioPlayer_init(&audioPlayer);
     audioPlayer_start(&audioPlayer);
+
+
     audioPlayer_run(&audioPlayer);
 
 }
