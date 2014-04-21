@@ -238,7 +238,7 @@ int audioRx_getNbNc(audioRx_t *pThis, chunk_t **ppChunk)
         	retval = PASS;
         else
         {
-        	printf("[Audio RX]: Failed to get chunk\r\n");
+        	//printf("[Audio RX]: Failed to get chunk\r\n");
         }
     }
     return retval;
