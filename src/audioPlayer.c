@@ -81,8 +81,8 @@ int audioPlayer_init(audioPlayer_t *pThis)
     /* Initialize the SSM2602 over the I2C interface */
     /* Initialize the SSM2602 to playback audio data */
     /* Initialize sport0 to receive audio data */
-    //status = ssm2602_init(&pThis->isrDisp, pThis->volume, pThis->frequency, SSM2602_TX);
-    status = ssm2602_init(&pThis->isrDisp, 0x27, SSM2602_SR_16000, SSM2602_RX|SSM2602_TX);
+    status = ssm2602_init(&pThis->isrDisp, pThis->volume, pThis->frequency, (SSM2602_RX | SSM2602_TX));
+    //status = ssm2602_init(&pThis->isrDisp, 0x27, SSM2602_SR_16000, SSM2602_RX|SSM2602_TX);
     if (PASS != status) {
         printf("SSM2602 init failed\r\n");
         return status;
@@ -189,10 +189,6 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 	// setup UART
 	//UARTStart();
     
-    while(1) {
-
-    	//testAudioLoopback(pThis);
-    	//testNBAudioPath(pThis);
     	testUART(pThis);
     	//UARTStart();
     	/*if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
@@ -207,6 +203,27 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     	}*/
     }
    // UARTStop();
+    	//testUART(pThis);
+    	/*
+    	int i = 0;
+		for(i = 0; i < SAMPLE_SIZE; i++)
+		{
+			transmitChunk.s08_buff[i] = 0;
+			receiveChunk.s08_buff[i] = 0;
+		}
+
+    	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
+    	{
+    		//if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
+    			 UARTStart();
+    			 bf52x_uart_transmit((char*)transmitChunk.u16_buff, SAMPLE_SIZE);
+    			 bf52x_uart_receive((char*)receiveChunk.u16_buff, SAMPLE_SIZE);
+    			 UARTStop();
+    			audioTx_put(&pThis->tx, &receiveChunk);
+    			//if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
+    	}
+		*/
+    }
 }
 
 
@@ -280,7 +297,7 @@ void testNBAudioPath(audioPlayer_t *pThis)
 void testAudioLoopBack(audioPlayer_t *pThis)
 {
 	if(PASS == audioRx_get(&pThis->rx, &receiveChunk))
-	audioTx_put(&pThis->tx, &receiveChunk);
+		audioTx_put(&pThis->tx, &receiveChunk);
 }
 
 void testUART(audioPlayer_t *pThis)
