@@ -187,7 +187,7 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 	printf("[AP]: running \r\n");
 
 	// setup UART
-	UARTStart();
+	//UARTStart();
     
     while(1) {
 
@@ -195,8 +195,7 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     	//testNBAudioPath(pThis);
     	testUART(pThis);
     	//UARTStart();
-    	/*
-    	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
+    	/*if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
     	{
     		if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
     		{
@@ -205,10 +204,9 @@ void audioPlayer_run (audioPlayer_t *pThis) {
     				audioTx_put(&pThis->tx, &receiveChunk);
     			}
     		}
-    	}
-		*/
+    	}*/
     }
-    UARTStop();
+   // UARTStop();
 }
 
 
@@ -287,22 +285,35 @@ void testAudioLoopBack(audioPlayer_t *pThis)
 
 void testUART(audioPlayer_t *pThis)
 {
+	int txStatus = 0;
+	int rxStatus = 0;
+	//if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
+	    	//{
 	int i = 0;
-	UARTStart();
-	char testdataout[50];
-	char testdatain[50];
-	for (i=0; i < 50; i++) { testdataout[i] = 0; testdatain[i] = 0; }
-	for(i = 0; i < 50; i++)
+	for(i = 0; i < SAMPLE_SIZE; i++)
 	{
-		testdataout[i] = i;
-		bf52x_uart_transmit(&testdataout[i], 1);
-		bf52x_uart_receive(&testdatain[i], 1);
+		transmitChunk.s08_buff[i] = i;
+	}
+	for(i = 0; i < SAMPLE_SIZE; i++)
+	{
+		receiveChunk.s08_buff[i] = 0;
+	}
+	UARTStart();
+	while(!txStatus && !rxStatus)
+	{
+	    		if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
+	    		{
+	    			txStatus = 1;
+	    			if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
+	    			{
+	    				rxStatus = 1;
+	    				//audioTx_put(&pThis->tx, &receiveChunk);
+	    			}
+	    		}
 	}
 	UARTStop();
-	for(i = 0; i < 50; i++)
-	{
-		printf("%d\r\n", i);
-	}
+	printf("uartRx");
+
 }
 
 
