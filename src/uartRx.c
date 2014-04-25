@@ -33,21 +33,18 @@ void uartRx_dmaConfig(chunk_t *pChunk)
 	DISABLE_DMA(*pDMA10_CONFIG);
 
 	/* 2. Configure start address */
-	*pDMA10_START_ADDR = &pChunk->u16_buff[0];	// should this match audioRx?
+	*pDMA10_START_ADDR = &pChunk->u08_buff[0];	// should this match audioRx?
 
 	/* 3. set X count */
-	*pDMA10_X_COUNT = pChunk->size/2;//*pDMA10_X_COUNT = 2;
+	*pDMA10_X_COUNT = pChunk->size;//*pDMA10_X_COUNT = 2;
 	//*pDMA10_Y_COUNT = pChunk->size/2; // 16 bit data so we change the stride and count
 
 	/* 4. set X modify */
-	*pDMA10_X_MODIFY = 2; //*pDMA10_X_MODIFY = 0;
+	*pDMA10_X_MODIFY = 1; //*pDMA10_X_MODIFY = 0;
 	//*pDMA10_Y_MODIFY = 2;
 
 	/* 5. Re-enable DMA */
 	ENABLE_DMA(*pDMA10_CONFIG);
-
-	/* 6. enable interrupt register */
-	*pUART1_IER |= ERBFI;
 }
 
 
@@ -79,7 +76,7 @@ int uartRx_init(uartRx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 		printf("[UART RX]: Queue init failed \r\n");
 
 	/* Configure the DMA10 for RX (data receive/memory write) */
-	*pDMA10_CONFIG = WDSIZE_16 | DI_EN | WNR; //| DMA2D; // not sure if this should be 2D
+	*pDMA10_CONFIG = WDSIZE_8 | DI_EN | WNR; //| DMA2D; // not sure if this should be 2D
 
 	// register own ISR to the ISR dispatcher
 	isrDisp_registerCallback(pIsrDisp, ISR_DMA10_UART1_RX, uartRx_isr, pThis);
@@ -113,7 +110,8 @@ int uartRx_start(uartRx_t *pThis)
 
 	uartRx_dmaConfig(pThis->pPending);
 
-	// enable the audio transfer
+	/* 6. enable interrupt register */
+	*pUART1_IER |= ERBFI;
 
 	return PASS;
 }
@@ -128,6 +126,8 @@ int uartRx_start(uartRx_t *pThis)
  */
 void uartRx_isr(void *pThisArg)
 {
+	int queueFail = 0;
+	int bufferPoolFail = 0;
 	//printf("[UART RX ISR]\r\n");
 	// local pThis to avoid constant casting
 	uartRx_t *pThis = (uartRx_t*) pThisArg;
@@ -141,7 +141,7 @@ void uartRx_isr(void *pThisArg)
          * RX QUEUE and a data is inserted to queue
          */
         if ( FAIL == queue_put(&pThis->queue, pThis->pPending) ) {
-
+        	queueFail = 1;
         	// reuse the same buffer and overwrite last samples
         	uartRx_dmaConfig(pThis->pPending);
         	//printf("[UART RX INT]: RX Packet Dropped \r\n");
@@ -156,7 +156,7 @@ void uartRx_isr(void *pThisArg)
 				 */
 				uartRx_dmaConfig(pThis->pPending);
 			} else {
-
+				bufferPoolFail = 1;
 				/* If not successful, then we are out of
 				 * memory because the buffer pool is empty.
 				 */
@@ -201,9 +201,10 @@ int uartRx_get(uartRx_t *pThis, chunk_t *pChunk)
 	else {
 		 chunk_copy(chunk_rx, pChunk);
 		 bufferPool_release(pThis->pBuffP, chunk_rx);
+		 return PASS;
 	}
 
-	return PASS;
+	return FAIL;
 }
 
 

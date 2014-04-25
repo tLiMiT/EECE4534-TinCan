@@ -210,6 +210,10 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
                 bufferPool_release(pThis->pBuffP, pchunk_temp);
                 return FAIL;
             }
+            else
+            {
+            	return PASS;
+            }
         }
 
     } else {
@@ -218,6 +222,6 @@ int audioTx_put(audioTx_t *pThis, chunk_t *pChunk)
     	return FAIL;
     }
     
-    return PASS;
+    return FAIL;
 }
 

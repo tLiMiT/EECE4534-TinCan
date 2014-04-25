@@ -193,7 +193,6 @@ void audioRx_isr(void *pThisArg)
 int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
 {
 	chunk_t *chunk_rx;
-
     /* Block till a chunk arrives on the rx queue */
     //while( queue_is_empty(&pThis->queue) ) {
 	if( queue_is_empty(&pThis->queue) ) {
@@ -209,9 +208,8 @@ int audioRx_get(audioRx_t *pThis, chunk_t *pChunk)
     else {
     	 chunk_copy(chunk_rx, pChunk);
     	 bufferPool_release(pThis->pBuffP, chunk_rx);
+    	 return PASS;
     }
-
-    return PASS;
 }
 
 

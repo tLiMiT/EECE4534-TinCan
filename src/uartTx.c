@@ -33,14 +33,14 @@ void uartTx_dmaConfig(chunk_t *pChunk)
 	DISABLE_DMA(*pDMA11_CONFIG);
 
 	/* 2. Configure start address */
-	*pDMA11_START_ADDR = &pChunk->u16_buff[0]; // should this match audioTx?
+	*pDMA11_START_ADDR = &pChunk->u08_buff[0]; // should this match audioTx?
 
 	/* 3. set X count */
-	*pDMA11_X_COUNT = pChunk->len/2;//*pDMA11_X_COUNT = 2; // should this match audioTx?
+	*pDMA11_X_COUNT = pChunk->len;//*pDMA11_X_COUNT = 2; // should this match audioTx?
 	//*pDMA11_Y_COUNT = pChunk->len/2;
 
 	/* 4. set X modify */
-	*pDMA11_X_MODIFY = 2;//*pDMA11_X_MODIFY = 0;
+	*pDMA11_X_MODIFY = 1;//*pDMA11_X_MODIFY = 0;
 	//*pDMA11_Y_MODIFY = 2;
 
 	/* 5. Re-enable DMA */
@@ -77,10 +77,14 @@ int uartTx_init(uartTx_t *pThis, bufferPool_t *pBuffP, isrDisp_t *pIsrDisp)
 	pThis->running      = 0;
 
 	// init queue
-	queue_init(&pThis->queue, UARTTX_QUEUE_DEPTH);
+	if(FAIL == queue_init(&pThis->queue, UARTTX_QUEUE_DEPTH))
+	{
+		printf("[UART TX]: Failed to init queue \r\n");
+		return FAIL;
+	}
 
 	/* Configure the DMA11 for TX (data transfer/memory read) */
-	*pDMA11_CONFIG = SYNC | WDSIZE_16 | DI_EN; // not sure if this should be 2D
+	*pDMA11_CONFIG = SYNC | WDSIZE_8 | DI_EN; // not sure if this should be 2D
 
 	// register own ISR to the ISR dispatcher
 	isrDisp_registerCallback(pIsrDisp, ISR_DMA11_UART1_TX, uartTx_isr, pThis);
@@ -166,7 +170,9 @@ void uartTx_isr(void *pThisArg)
 int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 {
 	chunk_t *pchunk_temp = NULL;
-
+	int queueFull = 0;
+	int bufferAcquired = 0;
+	int queuePut = 0;
 	    if ( NULL == pThis || NULL == pChunk ) {
 	        //printf("[UART TX]: Failed to put \r\n");
 	        return FAIL;
@@ -176,6 +182,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 	    //while(queue_is_full(&pThis->queue)) {
 	    if(queue_is_full(&pThis->queue)) {
 	        //printf("[UART TX]: Queue Full \r\n");
+	    	queueFull = 1;
 	        return FAIL;
 	        //powerMode_change(PWR_ACTIVE);
 	        //asm("idle;");
@@ -186,7 +193,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 		if ( PASS == bufferPool_acquire(pThis->pBuffP, &pchunk_temp) ) {
 			// copy chunk into free buffer for queue
 			chunk_copy(pChunk, pchunk_temp);
-
+			bufferAcquired = 1;
 			/* If DMA not running ? */
 			if ( 0 == pThis->running ) {
 				/* directly put chunk to DMA transfer & enable */
@@ -194,6 +201,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 				pThis->running  = 1;
 				pThis->pPending = pchunk_temp;
 				uartTx_dmaConfig(pThis->pPending);
+				return PASS;
 
 			} else {
 				//printf("[UART TX] Chunk added to queue\r\n");
@@ -201,8 +209,13 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 				if ( FAIL == queue_put(&pThis->queue, pchunk_temp) ) {
 					//printf("[UART TX] Failed to add to queue\r\n");
 					// return chunk to pool if queue is full, effectively dropping the chunk
+					queuePut = 1;
 					bufferPool_release(pThis->pBuffP, pchunk_temp);
 					return FAIL;
+				}
+				else
+				{
+					return PASS;
 				}
 			}
 
@@ -212,7 +225,7 @@ int uartTx_put(uartTx_t *pThis, chunk_t *pChunk)
 			return FAIL;
 		}
 
-	    return PASS;
+	    return FAIL;
 
 }
 

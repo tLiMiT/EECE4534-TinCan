@@ -46,12 +46,12 @@ int chunk_init(chunk_t *pThis)
  **/
 int chunk_copy(chunk_t *pSrc, chunk_t *pDst){
     unsigned int count;
-    unsigned int len = pSrc->len/4;
+    unsigned int len = pSrc->len;
     
     // copy manually since memcpy does not work currently
     // 
     for ( count = 0; len > count; count++ ) {
-        pDst->u32_buff[count] = pSrc->u32_buff[count];
+        pDst->u08_buff[count] = pSrc->u08_buff[count];
     }
     // update length of actual copied data
     pDst->len = pSrc->len;

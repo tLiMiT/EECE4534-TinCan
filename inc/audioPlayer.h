@@ -40,6 +40,8 @@ typedef struct {
   eSsm2602SampleFreq 	frequency;	/* Frequency of the audio player */
   chunk_t            *pReceiveChunk;  /* Chunk for copy */
   chunk_t			*pTransmitChunk;
+  unsigned char * pReceiveBuff;
+  unsigned char * pTransmitBuff;
 } audioPlayer_t;
 
 /** initialize audio player 

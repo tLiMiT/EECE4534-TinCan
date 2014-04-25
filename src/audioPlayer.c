@@ -99,6 +99,9 @@ int audioPlayer_init(audioPlayer_t *pThis)
 	chunk_init(&receiveChunk);
 	chunk_init(&transmitChunk);
 
+	pThis->pReceiveChunk = &receiveChunk;
+	pThis->pTransmitChunk = &transmitChunk;
+
     /* Initialize the extio */
     status = extio_init(&pThis->isrDisp);
     if ( PASS != status ) {
@@ -112,13 +115,13 @@ int audioPlayer_init(audioPlayer_t *pThis)
     }
 
     /* Initialize the UART TX module */
-    //status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
+    status = uartTx_init(&pThis->uartTx, &pThis->bp, &pThis->isrDisp);
     if ( PASS != status ) {
             return FAIL;
     }
 
     /* Initialize the UART RX module */
-	//status = uartRx_init(&pThis->uartRx, &pThis->bp, &pThis->isrDisp);
+	status = uartRx_init(&pThis->uartRx, &pThis->bp, &pThis->isrDisp);
 	if ( PASS != status ) {
 			return FAIL;
 	}
@@ -155,13 +158,13 @@ int audioPlayer_start(audioPlayer_t *pThis)
     }
 
 	/*Start the UART TX Module */
-	//status = uartTx_start(&pThis->uartTx);
+	status = uartTx_start(&pThis->uartTx);
 	if(PASS != status){
 		return FAIL;
 	}
 
 	/*Start the UART RX Module */
-	//status = uartRx_start(&pThis->uartRx);
+	status = uartRx_start(&pThis->uartRx);
 	if (PASS != status){
 		return FAIL;
 	}
@@ -186,44 +189,32 @@ void audioPlayer_run (audioPlayer_t *pThis) {
 
 	printf("[AP]: running \r\n");
 
+	UARTStart();
+	while(1)
+	{
 	// setup UART
-	//UARTStart();
-    
-    	testUART(pThis);
-    	//UARTStart();
-    	/*if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
-    	{
-    		if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
-    		{
-    			if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
-    			{
-    				audioTx_put(&pThis->tx, &receiveChunk);
-    			}
-    		}
-    	}*/
-    }
-   // UARTStop();
     	//testUART(pThis);
-    	/*
-    	int i = 0;
+		//testAudioLoopBack(pThis);
+		//testNBAudioPath(pThis);
+
+    	/*int i = 0;
 		for(i = 0; i < SAMPLE_SIZE; i++)
 		{
 			transmitChunk.s08_buff[i] = 0;
 			receiveChunk.s08_buff[i] = 0;
-		}
+		}*/
 
     	if(PASS == audioRx_get(&pThis->rx, &transmitChunk))
     	{
-    		//if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
-    			 UARTStart();
-    			 bf52x_uart_transmit((char*)transmitChunk.u16_buff, SAMPLE_SIZE);
-    			 bf52x_uart_receive((char*)receiveChunk.u16_buff, SAMPLE_SIZE);
-    			 UARTStop();
-    			audioTx_put(&pThis->tx, &receiveChunk);
-    			//if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
+    		uartTx_put(&pThis->uartTx, &transmitChunk);
     	}
-		*/
-    }
+		if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
+		{
+			audioTx_put(&pThis->tx, &receiveChunk);
+		}
+
+	}
+	UARTStop();
 }
 
 
@@ -233,37 +224,9 @@ void audioPlayer_run (audioPlayer_t *pThis) {
  */
 int UARTStart( void )
 {
-	unsigned short divisor;
-
 	*pPORTF_FER |= PF14 | PF15;		/* set function enable register for 14 and 15 */
 	*pPORTF_MUX &= ~0x0c00;
 	*pPORTF_MUX |= 0x0800;		/* set PF15to14_MUX to 2nd alt peripheral */
-
-	bf52x_uart_settings sett = {
-		.parenable = 0,
-		.parity = 0,
-		.rxtx_baud = BF52X_BAUD_RATE_115200
-	};
-
-	*pUART1_LCR = WLS(8);
-	if (sett.parenable && sett.parity) {
-		/* Enable parity check and on even parity */
-		*pUART1_LCR |= PEN | EPS;
-	}
-
-	if ((sett.rxtx_baud >= BF52X_BAUD_RATE_2400) &&
-			(sett.rxtx_baud <= BF52X_BAUD_RATE_6250000)) {
-				/* Enable Divisor Latch Access - DLAB bit to access DLL andl DLH registers */
-				*pUART1_LCR |= DLAB;
-				divisor = BF52X_SCLK/(16 * sett.rxtx_baud);
-				*pUART1_DLL = (0x00ff & divisor);
-				*pUART1_DLH = (0xff00 & divisor) >> 8;
-	}
-	/* Now disable the DLAB inorder to access UARTX_THR, UARTX_RBR and UARTX_IER registers */
-	*pUART1_LCR &= ~DLAB;
-
-	/* Enable the uart clock here */
-	*pUART1_GCTL |= UCEN;
 
     return PASS;
 }
@@ -275,9 +238,11 @@ int UARTStart( void )
  */
 int UARTStop( void )
 {
-	bf52x_uart_deinit();
 
     *pPORTF_FER 	&= 0x0000;		/* clear function enable register */
+
+    uartRx_dmaStop();
+    uartTx_dmaStop();
 
     asm("ssync;");
 
@@ -287,10 +252,8 @@ int UARTStop( void )
 void testNBAudioPath(audioPlayer_t *pThis)
 {
 	audioRx_get(&pThis->rx, &receiveChunk);
-	//UARTStart();
 	uartTx_put(&pThis->uartTx, &receiveChunk);
 	uartRx_get(&pThis->uartRx, &transmitChunk);
-	//UARTStop();
 	audioTx_put(&pThis->tx, &transmitChunk);
 }
 
@@ -311,22 +274,28 @@ void testUART(audioPlayer_t *pThis)
 	{
 		transmitChunk.s08_buff[i] = i;
 	}
+	transmitChunk.len = SAMPLE_SIZE;
 	for(i = 0; i < SAMPLE_SIZE; i++)
 	{
 		receiveChunk.s08_buff[i] = 0;
 	}
+	receiveChunk.len = 0;
+	pThis->pReceiveBuff = pThis->pReceiveChunk->u08_buff;
+	pThis->pTransmitBuff = pThis->pTransmitChunk->u08_buff;
 	UARTStart();
-	while(!txStatus && !rxStatus)
+	while(1)
 	{
-	    		if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
-	    		{
-	    			txStatus = 1;
-	    			if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
-	    			{
-	    				rxStatus = 1;
-	    				//audioTx_put(&pThis->tx, &receiveChunk);
-	    			}
-	    		}
+			if(PASS == uartTx_put(&pThis->uartTx, &transmitChunk))
+			{
+				txStatus = 1;
+			}
+			if(PASS == uartRx_get(&pThis->uartRx, &receiveChunk))
+			{
+				rxStatus = 1;
+				//audioTx_put(&pThis->tx, &receiveChunk);
+			}
+			if(txStatus && rxStatus)
+				break;
 	}
 	UARTStop();
 	printf("uartRx");

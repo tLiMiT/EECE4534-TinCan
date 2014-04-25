@@ -33,7 +33,7 @@
 		<link>
 			<name>BareBone Source</name>
 			<type>2</type>
-			<location>C:/EECE4535/cygwin/home/pal/bare-c/common/src</location>
+			<location>C:/opt/cygwin/home/pal/bare-c/common/src</location>
 		</link>
 	</linkedResources>
 </projectDescription>
